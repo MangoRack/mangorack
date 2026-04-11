@@ -1,5 +1,53 @@
 import { execFile } from "child_process";
 import * as net from "net";
+import { isSafeUrl, isSafeHost } from "@/lib/url-safety";
+
+/** Headers that are allowed in ping requests. */
+const ALLOWED_HEADERS = new Set([
+  "accept",
+  "content-type",
+  "user-agent",
+  "accept-language",
+  "accept-encoding",
+  "cache-control",
+  "if-none-match",
+  "if-modified-since",
+]);
+
+/** Headers that are always blocked (case-insensitive). */
+const BLOCKED_HEADERS = new Set([
+  "host",
+  "authorization",
+  "cookie",
+  "x-forwarded-for",
+  "x-forwarded-host",
+]);
+
+function sanitizeHeaders(
+  headers: Record<string, string> | undefined
+): Record<string, string> {
+  if (!headers) return {};
+  const sanitized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    const lower = key.toLowerCase();
+    // Block explicitly dangerous headers
+    if (BLOCKED_HEADERS.has(lower)) continue;
+    // Block any header starting with "proxy-"
+    if (lower.startsWith("proxy-")) continue;
+    // Allow known-safe headers
+    if (ALLOWED_HEADERS.has(lower)) {
+      sanitized[key] = value;
+      continue;
+    }
+    // Allow custom X- headers (except the blocked forwarded ones already filtered)
+    if (lower.startsWith("x-")) {
+      sanitized[key] = value;
+      continue;
+    }
+    // Drop everything else
+  }
+  return sanitized;
+}
 
 export interface CheckResult {
   status: "UP" | "DOWN" | "DEGRADED";
@@ -16,17 +64,27 @@ export async function checkHTTP(
   headers?: Record<string, string>,
   body?: string
 ): Promise<CheckResult> {
+  if (!isSafeUrl(url)) {
+    return {
+      status: "DOWN" as const,
+      responseTime: 0,
+      statusCode: 0,
+      error: "URL blocked by security policy",
+    };
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout * 1000);
   const start = Date.now();
 
   try {
+    const safeHeaders = sanitizeHeaders(headers);
     const fetchOptions: RequestInit = {
       method,
       signal: controller.signal,
       headers: {
         "User-Agent": "MangoRack/1.0 UptimeChecker",
-        ...(headers || {}),
+        ...safeHeaders,
       },
       redirect: "follow",
     };
@@ -67,6 +125,14 @@ export async function checkTCP(
   port: number,
   timeout: number = 10
 ): Promise<CheckResult> {
+  if (!isSafeHost(host)) {
+    return Promise.resolve({
+      status: "DOWN" as const,
+      responseTime: 0,
+      error: "Host blocked by security policy",
+    });
+  }
+
   return new Promise((resolve) => {
     const start = Date.now();
     const socket = new net.Socket();

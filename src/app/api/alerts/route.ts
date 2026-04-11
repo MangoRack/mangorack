@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireAuth, errorResponse, ApiError } from "@/lib/auth-helpers";
+
+const createAlertSchema = z.object({
+  name: z.string().min(1).max(255),
+  type: z.enum(["SERVICE_DOWN", "SERVICE_SLOW", "HIGH_ERROR_RATE", "LOG_PATTERN", "METRIC_THRESHOLD", "CUSTOM"]),
+  severity: z.enum(["INFO", "WARNING", "CRITICAL"]).optional(),
+  condition: z.object({
+    operator: z.enum(["gt", "lt", "eq", "gte", "lte", "contains", "matches"]).optional(),
+    value: z.union([z.number(), z.string()]).optional(),
+    threshold: z.number().optional(),
+    responseTimeMs: z.number().optional(),
+    errorRate: z.number().optional(),
+    pattern: z.string().max(200).optional(),
+    metric: z.string().optional(),
+    consecutiveFailures: z.number().int().min(1).optional(),
+  }),
+  serviceId: z.string().optional(),
+  isEnabled: z.boolean().optional(),
+  cooldownMins: z.number().int().min(1).optional(),
+});
 
 export async function GET() {
   try {
@@ -31,20 +51,17 @@ export async function POST(request: NextRequest) {
     await requireAuth();
 
     const json = await request.json();
-
-    if (!json.name || !json.type || !json.condition) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Fields 'name', 'type', and 'condition' are required");
-    }
+    const data = createAlertSchema.parse(json);
 
     const alert = await prisma.alert.create({
       data: {
-        name: json.name,
-        type: json.type,
-        condition: json.condition,
-        serviceId: json.serviceId,
-        severity: json.severity ?? "WARNING",
-        isEnabled: json.isEnabled ?? true,
-        cooldownMins: json.cooldownMins ?? 15,
+        name: data.name,
+        type: data.type,
+        condition: data.condition,
+        serviceId: data.serviceId,
+        severity: data.severity ?? "WARNING",
+        isEnabled: data.isEnabled ?? true,
+        cooldownMins: data.cooldownMins ?? 15,
       },
       include: {
         service: {
@@ -55,6 +72,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: alert }, { status: 201 });
   } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: err.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ") } },
+        { status: 400 }
+      );
+    }
     const { status, body } = errorResponse(err);
     return NextResponse.json(body, { status });
   }

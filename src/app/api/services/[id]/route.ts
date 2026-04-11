@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth, errorResponse, ApiError } from "@/lib/auth-helpers";
+import { isSafeUrl } from "@/lib/url-safety";
 
 export async function GET(
   _request: NextRequest,
@@ -44,6 +45,10 @@ export async function PATCH(
     }
 
     const json = await request.json();
+
+    if (json.url !== undefined && json.url && !isSafeUrl(json.url)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "URL blocked by security policy");
+    }
 
     const service = await prisma.service.update({
       where: { id: params.id },

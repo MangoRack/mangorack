@@ -1,22 +1,10 @@
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { isSafeUrl } from "@/lib/url-safety";
 import type { Alert, AlertEvent, UserSettings } from "@prisma/client";
 
 function isValidWebhookUrl(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    if (!["https:", "http:"].includes(url.protocol)) return false;
-    const hostname = url.hostname;
-    // Block private/internal IPs and metadata endpoints
-    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") return false;
-    if (hostname.startsWith("10.") || hostname.startsWith("192.168.")) return false;
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
-    if (hostname === "169.254.169.254") return false;
-    if (hostname === "metadata.google.internal") return false;
-    return true;
-  } catch {
-    return false;
-  }
+  return isSafeUrl(urlString);
 }
 
 interface AlertCondition {
@@ -81,9 +69,16 @@ export async function evaluateAlert(
     case "LOG_PATTERN": {
       const pattern = condition.pattern;
       if (!pattern || !context.logMessage) return false;
+      // Reject patterns that are too long or contain catastrophic backtracking indicators
+      if (pattern.length > 200) return false;
+      if (/(\+|\*|\?)\)[\+\*\?]|\(\.\*[^)]*\)\{/.test(pattern)) return false;
       try {
         const regex = new RegExp(pattern, "i");
-        return regex.test(context.logMessage);
+        try {
+          return regex.test(context.logMessage);
+        } catch {
+          return false;
+        }
       } catch {
         return context.logMessage.includes(pattern);
       }

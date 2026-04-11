@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { Prisma, ServiceStatus } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAuth, errorResponse, ApiError } from "@/lib/auth-helpers";
+import { isSafeUrl } from "@/lib/url-safety";
+
+const createServiceSchema = z.object({
+  name: z.string().min(1).max(255),
+  type: z.enum(["HTTP", "HTTPS", "TCP", "PING", "DNS"]),
+  description: z.string().max(1000).optional(),
+  url: z.string().max(2048).optional(),
+  category: z.string().max(100).optional(),
+  tags: z.array(z.string().max(100)).max(20).optional(),
+  nodeId: z.string().optional(),
+  port: z.number().int().min(1).max(65535).optional().nullable(),
+  icon: z.string().max(255).optional().nullable(),
+  color: z.string().max(50).optional().nullable(),
+  isActive: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
+  pingEnabled: z.boolean().optional(),
+  pingInterval: z.number().int().min(10).optional(),
+  pingTimeout: z.number().int().min(1).optional(),
+  expectedStatus: z.number().int().optional(),
+  pingMethod: z.string().optional(),
+  pingHeaders: z.record(z.string()).optional().nullable(),
+  pingBody: z.string().optional().nullable(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,38 +82,45 @@ export async function POST(request: NextRequest) {
     await requireAuth();
 
     const json = await request.json();
+    const data = createServiceSchema.parse(json);
 
-    if (!json.name || !json.type) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Fields 'name' and 'type' are required");
+    if (data.url && !isSafeUrl(data.url)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "URL blocked by security policy");
     }
 
     const service = await prisma.service.create({
       data: {
-        name: json.name,
-        type: json.type,
-        description: json.description,
-        url: json.url,
-        category: json.category,
-        tags: json.tags ?? [],
-        nodeId: json.nodeId,
-        port: json.port,
-        icon: json.icon,
-        color: json.color,
-        isActive: json.isActive ?? true,
-        isPinned: json.isPinned ?? false,
-        pingEnabled: json.pingEnabled ?? true,
-        pingInterval: json.pingInterval ?? 60,
-        pingTimeout: json.pingTimeout ?? 10,
-        expectedStatus: json.expectedStatus ?? 200,
-        pingMethod: json.pingMethod ?? "GET",
-        pingHeaders: json.pingHeaders,
-        pingBody: json.pingBody,
+        name: data.name,
+        type: data.type,
+        description: data.description,
+        url: data.url,
+        category: data.category,
+        tags: data.tags ?? [],
+        nodeId: data.nodeId,
+        port: data.port,
+        icon: data.icon,
+        color: data.color,
+        isActive: data.isActive ?? true,
+        isPinned: data.isPinned ?? false,
+        pingEnabled: data.pingEnabled ?? true,
+        pingInterval: data.pingInterval ?? 60,
+        pingTimeout: data.pingTimeout ?? 10,
+        expectedStatus: data.expectedStatus ?? 200,
+        pingMethod: data.pingMethod ?? "GET",
+        pingHeaders: data.pingHeaders,
+        pingBody: data.pingBody,
       },
       include: { node: true },
     });
 
     return NextResponse.json({ data: service }, { status: 201 });
   } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: err.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ") } },
+        { status: 400 }
+      );
+    }
     const { status, body } = errorResponse(err);
     return NextResponse.json(body, { status });
   }

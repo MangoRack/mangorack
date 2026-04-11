@@ -20,7 +20,8 @@ function LoginForm() {
 
   const callbackError = searchParams.get("error")
   const successMessage = searchParams.get("success")
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const rawCallbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = rawCallbackUrl.startsWith('/') && !rawCallbackUrl.startsWith('//') ? rawCallbackUrl : '/'
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -36,8 +37,8 @@ function LoginForm() {
       setIsLoading(false)
       return
     }
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters")
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters")
       setIsLoading(false)
       return
     }

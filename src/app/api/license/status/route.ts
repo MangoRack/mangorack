@@ -5,6 +5,12 @@ import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
 
 const LICENSE_API = process.env.LICENSE_API_URL || "https://api.mangorack.dev/v1/license";
+
+function maskKey(key: string | null): string | null {
+  if (!key) return null;
+  if (key.length <= 8) return "****";
+  return key.slice(0, 4) + "****" + key.slice(-4);
+}
 const REVALIDATION_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const REVALIDATION_CACHE_KEY = "license:last_revalidation";
 
@@ -101,13 +107,13 @@ export async function GET() {
             } catch { /* Redis unavailable */ }
 
             recordRevalidation();
-            logger.info(`License ${license.key} revoked by server — downgrading to FREE`);
+            logger.info(`License ${maskKey(license.key)} revoked by server — downgrading to FREE`);
 
             return NextResponse.json({
               data: {
                 plan: "FREE",
                 isValid: false,
-                key: license.key,
+                key: maskKey(license.key),
                 activatedAt: license.activatedAt,
                 expiresAt: license.expiresAt,
                 email: license.email,
@@ -139,7 +145,7 @@ export async function GET() {
               data: {
                 plan: serverPlan,
                 isValid: license.isValid,
-                key: license.key,
+                key: maskKey(license.key),
                 activatedAt: license.activatedAt,
                 expiresAt: license.expiresAt,
                 email: license.email,
@@ -160,7 +166,7 @@ export async function GET() {
       data: {
         plan: license.plan,
         isValid: license.isValid,
-        key: license.key,
+        key: maskKey(license.key),
         activatedAt: license.activatedAt,
         expiresAt: license.expiresAt,
         email: license.email,

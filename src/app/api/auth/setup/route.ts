@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
@@ -26,18 +27,26 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(data.password, 12);
 
-    const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        name: data.name || "Admin",
-        passwordHash,
-        settings: {
-          create: {
-            theme: "system",
+    // Use a transaction with an atomic check to prevent TOCTOU race conditions.
+    // Re-check count inside the transaction so concurrent requests cannot both proceed.
+    const user = await prisma.$transaction(async (tx) => {
+      const countInTx = await tx.user.count();
+      if (countInTx > 0) {
+        throw new Error("ALREADY_SETUP");
+      }
+      return tx.user.create({
+        data: {
+          email: data.email,
+          name: data.name || "Admin",
+          passwordHash,
+          settings: {
+            create: {
+              theme: "system",
+            },
           },
         },
-      },
-      select: { id: true, email: true, name: true },
+        select: { id: true, email: true, name: true },
+      });
     });
 
     return NextResponse.json({ data: { success: true, user } }, { status: 201 });
@@ -46,6 +55,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: { code: "VALIDATION_ERROR", message: err.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ") } },
         { status: 400 }
+      );
+    }
+    if (err instanceof Error && err.message === "ALREADY_SETUP") {
+      return NextResponse.json(
+        { error: { code: "ALREADY_SETUP", message: "An admin account already exists" } },
+        { status: 409 }
+      );
+    }
+    // Handle unique constraint violation (e.g., duplicate email from concurrent request)
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json(
+        { error: { code: "ALREADY_SETUP", message: "An admin account already exists" } },
+        { status: 409 }
       );
     }
     logger.error("Setup error:", err);

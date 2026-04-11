@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import redis from "@/lib/redis";
 import { ApiError, errorResponse } from "@/lib/auth-helpers";
+import { getLicensePlan } from "@/lib/limits";
 
 const metricSchema = z.object({
   name: z.string().min(1).max(255),
@@ -30,6 +32,24 @@ export async function POST(request: NextRequest) {
     });
     if (!tokenService) {
       throw new ApiError(401, "UNAUTHORIZED", "Invalid service token");
+    }
+
+    // Rate limiting for free tier
+    const plan = await getLicensePlan();
+    if (plan === "FREE") {
+      const rateLimitKey = `ratelimit:metrics:${tokenService.id}`;
+      const count = await redis.incr(rateLimitKey);
+      if (count === 1) {
+        await redis.expire(rateLimitKey, 60); // 1 minute window
+      }
+      if (count > 100) {
+        throw new ApiError(
+          429,
+          "RATE_LIMITED",
+          "Free plan: max 100 metric ingestions per minute. Upgrade for higher limits.",
+          true
+        );
+      }
     }
 
     const body = await request.json();
