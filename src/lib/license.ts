@@ -1,10 +1,8 @@
-import crypto from "crypto"
 import { prisma } from "./prisma"
 import { redis } from "./redis"
 
-const LICENSE_SECRET = process.env.LICENSE_SECRET!
-const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
-const CACHE_TTL = 3600
+const LICENSE_API = process.env.LICENSE_API_URL || "https://api.mangorack.dev/v1/license"
+const CACHE_TTL = 3600 // 1 hour
 const CACHE_KEY_PREFIX = "license:"
 const PLAN_CACHE_KEY = "license:current_plan"
 
@@ -15,54 +13,12 @@ export interface LicenseValidationResult {
   error?: string
 }
 
-function base32Decode(encoded: string): Buffer {
-  const bytes: number[] = []
-  let bits = 0
-  let value = 0
-
-  for (let i = 0; i < encoded.length; i++) {
-    const idx = ALPHABET.indexOf(encoded[i])
-    if (idx === -1) throw new Error("Invalid character in key")
-    value = (value << 5) | idx
-    bits += 5
-    while (bits >= 8) {
-      bits -= 8
-      bytes.push((value >> bits) & 0xff)
-    }
-  }
-
-  return Buffer.from(bytes)
-}
-
-function parseKeyString(key: string): string | null {
-  const match = key
-    .toUpperCase()
-    .trim()
-    .match(/^MANGO-([23456789A-Z]{5})-([23456789A-Z]{5})-([23456789A-Z]{5})-([23456789A-Z]{5})$/)
-  if (!match) return null
-  return match[1] + match[2] + match[3] + match[4]
-}
-
 export async function validateLicenseKey(
   key: string
 ): Promise<LicenseValidationResult> {
-  if (!LICENSE_SECRET) {
-    return { valid: false, plan: "FREE", error: "License validation unavailable" }
-  }
-
-  // Check Redis cache
-  try {
-    const cached = await redis.get(`${CACHE_KEY_PREFIX}${key}`)
-    if (cached) {
-      return JSON.parse(cached)
-    }
-  } catch {
-    // Redis unavailable, continue without cache
-  }
-
-  // Parse the key format
-  const encoded = parseKeyString(key)
-  if (!encoded) {
+  // Basic format check
+  const formatted = key.toUpperCase().trim()
+  if (!/^MANGO-[23456789A-Z]{5}-[23456789A-Z]{5}-[23456789A-Z]{5}-[23456789A-Z]{5}$/.test(formatted)) {
     return {
       valid: false,
       plan: "FREE",
@@ -70,103 +26,109 @@ export async function validateLicenseKey(
     }
   }
 
-  // Decode
-  let decoded: Buffer
+  // Check Redis cache
   try {
-    decoded = base32Decode(encoded)
+    const cached = await redis.get(`${CACHE_KEY_PREFIX}${formatted}`)
+    if (cached) {
+      return JSON.parse(cached)
+    }
   } catch {
-    return { valid: false, plan: "FREE", error: "Invalid key encoding" }
+    // Redis unavailable
   }
 
-  if (decoded.length < 19) {
-    return { valid: false, plan: "FREE", error: "Invalid key data" }
-  }
+  // Validate against external license server
+  let result: LicenseValidationResult
+  try {
+    const res = await fetch(`${LICENSE_API}/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: formatted }),
+      signal: AbortSignal.timeout(10000),
+    })
 
-  // Extract parts
-  const payload = decoded.subarray(0, 15)
-  const providedSig = decoded.subarray(15, 19)
-
-  // Verify HMAC
-  const hmac = crypto.createHmac("sha256", LICENSE_SECRET)
-  hmac.update(payload)
-  const expectedSig = hmac.digest().subarray(0, 4)
-
-  if (!crypto.timingSafeEqual(providedSig, expectedSig)) {
-    return { valid: false, plan: "FREE", error: "Invalid license key" }
-  }
-
-  // Extract plan
-  const planByte = payload[10]
-  let plan: "PRO" | "LIFETIME"
-  if (planByte === 0x50) {
-    plan = "PRO"
-  } else if (planByte === 0x4c) {
-    plan = "LIFETIME"
-  } else {
-    return { valid: false, plan: "FREE", error: "Invalid plan in key" }
-  }
-
-  // Extract expiry
-  const expiryTimestamp = payload.readUInt32BE(11)
-  let expiresAt: Date | undefined
-  if (expiryTimestamp > 0) {
-    expiresAt = new Date(expiryTimestamp * 1000)
-    if (expiresAt < new Date()) {
-      const result: LicenseValidationResult = {
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      result = {
         valid: false,
         plan: "FREE",
-        expiresAt,
-        error: "License key has expired",
+        error: (errorData as any).error || "License validation failed",
       }
-      try {
-        await redis.setex(
-          `${CACHE_KEY_PREFIX}${key}`,
-          CACHE_TTL,
-          JSON.stringify(result)
-        )
-      } catch {
-        // Redis unavailable
+    } else {
+      const data = await res.json() as any
+      result = {
+        valid: data.valid === true,
+        plan: data.plan || "FREE",
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+        error: data.error,
       }
-      return result
+    }
+  } catch (error) {
+    // If the license server is unreachable, check local database for a previously validated key
+    try {
+      const local = await prisma.license.findFirst({
+        where: {
+          key: formatted,
+          isValid: true,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+      })
+
+      if (local) {
+        result = {
+          valid: true,
+          plan: local.plan as "PRO" | "LIFETIME",
+          expiresAt: local.expiresAt || undefined,
+        }
+      } else {
+        result = {
+          valid: false,
+          plan: "FREE",
+          error: "Unable to reach license server. Please check your internet connection.",
+        }
+      }
+    } catch {
+      result = {
+        valid: false,
+        plan: "FREE",
+        error: "Unable to validate license. Please try again later.",
+      }
     }
   }
 
-  // Store in database
-  try {
-    await prisma.license.upsert({
-      where: { key },
-      update: {
-        plan,
-        isValid: true,
-        expiresAt: expiresAt || null,
-        activatedAt: new Date(),
-      },
-      create: {
-        key,
-        plan,
-        isValid: true,
-        expiresAt: expiresAt || null,
-        activatedAt: new Date(),
-      },
-    })
-  } catch (error) {
-    console.error("Failed to store license:", error)
-  }
-
-  const result: LicenseValidationResult = {
-    valid: true,
-    plan,
-    expiresAt,
+  // Store valid license in local database
+  if (result.valid && (result.plan === "PRO" || result.plan === "LIFETIME")) {
+    try {
+      await prisma.license.upsert({
+        where: { key: formatted },
+        update: {
+          plan: result.plan,
+          isValid: true,
+          expiresAt: result.expiresAt || null,
+          activatedAt: new Date(),
+        },
+        create: {
+          key: formatted,
+          plan: result.plan,
+          isValid: true,
+          expiresAt: result.expiresAt || null,
+          activatedAt: new Date(),
+        },
+      })
+    } catch (error) {
+      console.error("Failed to store license:", error)
+    }
   }
 
   // Cache result
   try {
     await redis.setex(
-      `${CACHE_KEY_PREFIX}${key}`,
+      `${CACHE_KEY_PREFIX}${formatted}`,
       CACHE_TTL,
       JSON.stringify(result)
     )
-    await redis.setex(PLAN_CACHE_KEY, CACHE_TTL, plan)
+    if (result.valid) {
+      await redis.setex(PLAN_CACHE_KEY, CACHE_TTL, result.plan)
+    }
   } catch {
     // Redis unavailable
   }

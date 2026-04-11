@@ -61,7 +61,7 @@ Technical overview of MangoLab's architecture, data model, and design decisions.
 | **Container** | Docker | 20+ | Application packaging |
 | **Orchestration** | Docker Compose | 2+ | Multi-container deployment |
 | **Password Hashing** | bcryptjs | Latest | Secure password storage |
-| **License Crypto** | Node.js crypto | Built-in | HMAC-SHA256 license key validation |
+| **License Validation** | External API | -- | License key validation via MangoRack license server |
 
 ## Database Schema Overview
 
@@ -98,7 +98,7 @@ DashboardLayout                     (standalone)
 
 **DashboardLayout**: Dashboard widget configurations stored as JSON. Supports multiple named layouts.
 
-**License**: License key storage with plan type, activation date, and expiry. The key itself contains embedded plan and expiry data verified via HMAC.
+**License**: License key storage with plan type, activation date, and expiry. Keys are validated against the MangoRack license server on activation.
 
 ## Background Workers
 
@@ -238,9 +238,9 @@ Cache invalidation:
 
 ### License Security
 
-- License keys are validated server-side using cryptographic signatures
-- The key payload contains the plan type and expiry date
-- Timing-safe comparison is used to prevent timing attacks
+- License keys are validated against the external MangoRack license server
+- Valid licenses are cached locally for offline use
+- Keys cannot be generated or forged locally
 
 ### Network Security
 
