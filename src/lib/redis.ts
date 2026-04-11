@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { logger } from "@/lib/logger";
 
 const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
@@ -7,9 +8,11 @@ const globalForRedis = globalThis as unknown as {
 function createRedisClient(): Redis {
   const url = process.env.REDIS_URL || "redis://localhost:6379";
   const client = new Redis(url, {
-    maxRetriesPerRequest: null,
+    maxRetriesPerRequest: 3,
     enableReadyCheck: false,
     lazyConnect: true,
+    connectTimeout: 5000,
+    commandTimeout: 3000,
     retryStrategy(times: number) {
       if (times > 10) return null;
       return Math.min(times * 200, 5000);
@@ -17,7 +20,7 @@ function createRedisClient(): Redis {
   });
 
   client.on("error", (err) => {
-    console.error("Redis connection error:", err);
+    logger.error("Redis connection error:", err);
   });
 
   return client;

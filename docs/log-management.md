@@ -1,6 +1,6 @@
 # Log Management
 
-MangoLab provides centralized log collection and viewing for all your homelab services. Logs can be ingested via the HTTP API and viewed through the built-in log viewer.
+MangoRack provides centralized log collection and viewing for all your homelab services. Logs can be ingested via the HTTP API and viewed through the built-in log viewer.
 
 ## The Log Viewer Interface
 
@@ -14,7 +14,7 @@ The log viewer (accessible from the main navigation under **Logs**) provides:
 
 ## Log Levels
 
-MangoLab supports five standard log levels, ordered by severity:
+MangoRack supports five standard log levels, ordered by severity:
 
 | Level | Color | Description | Use For |
 |---|---|---|---|
@@ -57,7 +57,7 @@ Click the **Live** toggle in the log viewer to enable real-time streaming. In li
 
 ## HTTP Log Ingestion Endpoint
 
-Send logs to MangoLab programmatically using the REST API.
+Send logs to MangoRack programmatically using the REST API.
 
 ### Endpoint
 
@@ -218,11 +218,11 @@ curl -X POST http://localhost:3000/api/ingest/logs \
 #### Node.js
 
 ```javascript
-const MANGOLAB_URL = "http://localhost:3000";
+const MANGORACK_URL = "http://localhost:3000";
 const SERVICE_TOKEN = "clxxxxxxxxxxxxxxxxxx";
 
 async function sendLog(level, message, source, metadata) {
-  const response = await fetch(`${MANGOLAB_URL}/api/ingest/logs`, {
+  const response = await fetch(`${MANGORACK_URL}/api/ingest/logs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -248,7 +248,7 @@ import requests
 import json
 from datetime import datetime
 
-MANGOLAB_URL = "http://localhost:3000"
+MANGORACK_URL = "http://localhost:3000"
 SERVICE_TOKEN = "clxxxxxxxxxxxxxxxxxx"
 
 def send_log(level, message, source=None, metadata=None):
@@ -263,7 +263,7 @@ def send_log(level, message, source=None, metadata=None):
         entry["metadata"] = metadata
 
     response = requests.post(
-        f"{MANGOLAB_URL}/api/ingest/logs",
+        f"{MANGORACK_URL}/api/ingest/logs",
         headers={
             "Content-Type": "application/json",
             "X-Service-Token": SERVICE_TOKEN,
@@ -283,15 +283,15 @@ send_log("ERROR", "Disk full", "monitor", {"disk": "/dev/sda1"})
 
 ```bash
 #!/bin/bash
-# send-log.sh -- Send a log entry to MangoLab
+# send-log.sh -- Send a log entry to MangoRack
 
-MANGOLAB_URL="http://localhost:3000"
+MANGORACK_URL="http://localhost:3000"
 SERVICE_TOKEN="clxxxxxxxxxxxxxxxxxx"
 LEVEL="${1:-INFO}"
 MESSAGE="$2"
 SOURCE="${3:-script}"
 
-curl -s -X POST "$MANGOLAB_URL/api/ingest/logs" \
+curl -s -X POST "$MANGORACK_URL/api/ingest/logs" \
   -H "Content-Type: application/json" \
   -H "X-Service-Token: $SERVICE_TOKEN" \
   -d "[{

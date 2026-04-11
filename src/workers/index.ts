@@ -1,19 +1,17 @@
 import { createPingWorker, scheduleAllPingChecks } from "./pingWorker";
 import { createAlertWorker } from "./alertWorker";
 import { createCleanupWorker, scheduleCleanupJob } from "./cleanupWorker";
+import { logger } from "@/lib/logger";
 
 async function main() {
-  console.log("Starting MangoLab workers...");
+  logger.info("Starting MangoRack workers...");
 
   // Create workers
   const pingWorker = createPingWorker();
   const alertWorker = createAlertWorker();
   const cleanupWorker = createCleanupWorker();
 
-  console.log("Workers started:");
-  console.log("  - Ping worker (concurrency: 10)");
-  console.log("  - Alert worker (concurrency: 5)");
-  console.log("  - Cleanup worker (concurrency: 1)");
+  logger.info("Workers started: Ping (concurrency: 10), Alert (concurrency: 5), Cleanup (concurrency: 1)");
 
   // Schedule repeatable jobs
   await scheduleCleanupJob();
@@ -23,7 +21,7 @@ async function main() {
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
-    console.log(`\nReceived ${signal}. Shutting down workers gracefully...`);
+    logger.info(`Received ${signal}. Shutting down workers gracefully...`);
 
     await Promise.all([
       pingWorker.close(),
@@ -31,17 +29,17 @@ async function main() {
       cleanupWorker.close(),
     ]);
 
-    console.log("All workers stopped.");
+    logger.info("All workers stopped.");
     process.exit(0);
   };
 
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 
-  console.log("MangoLab workers running. Press Ctrl+C to stop.");
+  logger.info("MangoRack workers running. Press Ctrl+C to stop.");
 }
 
 main().catch((err) => {
-  console.error("Failed to start workers:", err);
+  logger.error("Failed to start workers:", err);
   process.exit(1);
 });

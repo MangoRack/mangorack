@@ -24,7 +24,7 @@ function getPageTitle(pathname: string): string {
   for (const [path, title] of Object.entries(pageTitles)) {
     if (pathname.startsWith(path) && path !== "/") return title
   }
-  return "MangoLab"
+  return "MangoRack"
 }
 
 export function Header() {

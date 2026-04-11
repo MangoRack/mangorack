@@ -96,9 +96,10 @@ export default function LicenseSettingsPage() {
       try {
         const res = await fetch("/api/license/status")
         if (res.ok) {
-          const data = await res.json()
-          if (data.isValid && data.key) {
-            setMaskedKey(data.key)
+          const json = await res.json()
+          const status = json.data
+          if (status?.isValid && status?.key) {
+            setMaskedKey(status.key)
           }
         }
       } catch {
@@ -149,7 +150,7 @@ export default function LicenseSettingsPage() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">License</h2>
         <p className="text-muted-foreground mt-1">
-          Manage your MangoLab license and view feature limits
+          Manage your MangoRack license and view feature limits
         </p>
       </div>
 
@@ -204,7 +205,9 @@ export default function LicenseSettingsPage() {
         )}
 
         <form onSubmit={handleValidate} className="flex gap-3">
+          <label htmlFor="license-key-input" className="sr-only">License key</label>
           <input
+            id="license-key-input"
             type="text"
             value={licenseKey}
             onChange={(e) => setLicenseKey(e.target.value)}

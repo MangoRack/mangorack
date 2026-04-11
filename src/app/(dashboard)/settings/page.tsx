@@ -29,14 +29,14 @@ const TIMEZONES = [
 ]
 
 export default function SettingsPage() {
-  const [appName, setAppName] = useState("MangoLab")
+  const [appName, setAppName] = useState("MangoRack")
   const [defaultTimeRange, setDefaultTimeRange] = useState("24h")
   const [timezone, setTimezone] = useState("UTC")
   const [saving, setSaving] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem("mangolab-settings")
+    const stored = localStorage.getItem("mangorack-settings")
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
@@ -56,7 +56,7 @@ export default function SettingsPage() {
 
     try {
       localStorage.setItem(
-        "mangolab-settings",
+        "mangorack-settings",
         JSON.stringify({ appName, defaultTimeRange, timezone })
       )
       toast.success("Settings saved successfully.")
@@ -80,7 +80,7 @@ export default function SettingsPage() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">General</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure your MangoLab instance.
+          Configure your MangoRack instance.
         </p>
       </div>
 
@@ -99,7 +99,7 @@ export default function SettingsPage() {
             value={appName}
             onChange={(e) => setAppName(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="MangoLab"
+            placeholder="MangoRack"
           />
           <p className="text-xs text-muted-foreground">
             The name displayed in the browser tab and sidebar.

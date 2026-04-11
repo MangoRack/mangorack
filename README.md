@@ -61,7 +61,7 @@ curl http://localhost:3000/api/health
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | Yes | `postgresql://mangolab:changeme@localhost:5432/mangolab` | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | `postgresql://mangorack:changeme@localhost:5432/mangorack` | PostgreSQL connection string |
 | `POSTGRES_PASSWORD` | Yes | `changeme` | PostgreSQL password (used in docker-compose) |
 | `REDIS_URL` | Yes | `redis://localhost:6379` | Redis connection string |
 | `NEXTAUTH_SECRET` | **Yes** | -- | Secret for session encryption (min 32 chars). Generate with `openssl rand -base64 32` |
@@ -137,10 +137,10 @@ curl -X POST http://localhost:3000/api/ingest/metrics \
 
 ```bash
 # Backup PostgreSQL
-docker compose exec db pg_dump -U mangolab mangolab > backup.sql
+docker compose exec db pg_dump -U mangorack mangorack > backup.sql
 
 # Restore PostgreSQL
-docker compose exec -T db psql -U mangolab mangolab < backup.sql
+docker compose exec -T db psql -U mangorack mangorack < backup.sql
 ```
 
 ---

@@ -1,18 +1,21 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
+import crypto from "crypto"
 
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log("Seeding MangoLab database...")
+  console.log("Seeding MangoRack database...")
 
-  // 1. Create admin user
-  const passwordHash = await bcrypt.hash("admin123", 12)
+  // 1. Create admin user (use ADMIN_PASSWORD env var or generate random)
+  const password = process.env.ADMIN_PASSWORD || crypto.randomUUID().slice(0, 16)
+  const passwordHash = await bcrypt.hash(password, 12)
+  console.log(`  Admin password: ${password} (change this after first login)`)
   const user = await prisma.user.upsert({
-    where: { email: "admin@mangolab.local" },
+    where: { email: "admin@mangorack.local" },
     update: {},
     create: {
-      email: "admin@mangolab.local",
+      email: "admin@mangorack.local",
       name: "Admin",
       passwordHash,
       settings: {
@@ -273,8 +276,8 @@ async function main() {
     {
       serviceId: null,
       level: "INFO" as const,
-      message: "MangoLab started on port 3000",
-      source: "mangolab",
+      message: "MangoRack started on port 3000",
+      source: "mangorack",
       metadata: { version: "1.0.0" },
       timestamp: new Date(now.getTime() - 86400000),
     },
@@ -282,7 +285,7 @@ async function main() {
       serviceId: null,
       level: "INFO" as const,
       message: "Database migrations applied successfully",
-      source: "mangolab",
+      source: "mangorack",
       metadata: { migrations: 3 },
       timestamp: new Date(now.getTime() - 86300000),
     },
@@ -349,7 +352,7 @@ async function main() {
 
   console.log("")
   console.log("Seed complete!")
-  console.log("  Login: admin@mangolab.local / admin123")
+  console.log(`  Login: admin@mangorack.local / ${password}`)
 }
 
 main()

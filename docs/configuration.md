@@ -1,6 +1,6 @@
 # Configuration
 
-MangoLab is configured through environment variables defined in the `.env` file. This guide covers every available option.
+MangoRack is configured through environment variables defined in the `.env` file. This guide covers every available option.
 
 ## Environment Variables Reference
 
@@ -8,7 +8,7 @@ MangoLab is configured through environment variables defined in the `.env` file.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | Yes | `postgresql://mangolab:changeme@localhost:5432/mangolab` | Full PostgreSQL connection string |
+| `DATABASE_URL` | Yes | `postgresql://mangorack:changeme@localhost:5432/mangorack` | Full PostgreSQL connection string |
 | `POSTGRES_PASSWORD` | Yes | `changeme` | PostgreSQL password (used by the `db` container in Docker Compose) |
 
 **Connection string format:**
@@ -22,19 +22,19 @@ postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 If you already have a PostgreSQL 16+ instance, set `DATABASE_URL` to point to it and remove the `db` service from `docker-compose.yml`:
 
 ```env
-DATABASE_URL=postgresql://myuser:mypass@db.example.com:5432/mangolab
+DATABASE_URL=postgresql://myuser:mypass@db.example.com:5432/mangorack
 ```
 
 Requirements for external databases:
 - PostgreSQL 16 or higher
-- A dedicated database (e.g., `mangolab`)
+- A dedicated database (e.g., `mangorack`)
 - A user with full privileges on that database
-- Network connectivity from the MangoLab container
+- Network connectivity from the MangoRack container
 
 **Custom port:**
 
 ```env
-DATABASE_URL=postgresql://mangolab:changeme@db:5433/mangolab
+DATABASE_URL=postgresql://mangorack:changeme@db:5433/mangorack
 ```
 
 ### Redis
@@ -68,14 +68,14 @@ Redis is used for:
 - Rate limiting (log ingestion)
 - Session data (optional)
 
-MangoLab will continue to function if Redis is temporarily unavailable, but caching and rate limiting will be bypassed.
+MangoRack will continue to function if Redis is temporarily unavailable, but caching and rate limiting will be bypassed.
 
 ### Authentication
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `NEXTAUTH_SECRET` | **Yes** | -- | Secret key for encrypting sessions. Must be at least 32 characters. |
-| `NEXTAUTH_URL` | Yes | `http://localhost:3000` | The canonical URL of your MangoLab instance. Must match the URL users access in their browser. |
+| `NEXTAUTH_URL` | Yes | `http://localhost:3000` | The canonical URL of your MangoRack instance. Must match the URL users access in their browser. |
 
 **Generating a secret:**
 
@@ -88,7 +88,7 @@ openssl rand -base64 32
 When running behind a reverse proxy (Nginx, Traefik, Caddy), set `NEXTAUTH_URL` to the external URL:
 
 ```env
-NEXTAUTH_URL=https://mangolab.example.com
+NEXTAUTH_URL=https://mangorack.example.com
 ```
 
 > **Important:** If `NEXTAUTH_URL` does not match the URL in the browser, authentication will fail with redirect errors.
@@ -171,7 +171,7 @@ redis:
 
 ```env
 # ── Database
-DATABASE_URL=postgresql://mangolab:a-strong-password@db:5432/mangolab
+DATABASE_URL=postgresql://mangorack:a-strong-password@db:5432/mangorack
 POSTGRES_PASSWORD=a-strong-password
 
 # ── Redis
@@ -179,7 +179,7 @@ REDIS_URL=redis://redis:6379
 
 # ── Auth
 NEXTAUTH_SECRET=Gx9k3mF7pQw2tR5vY8zA1cE4hJ6nB0dL
-NEXTAUTH_URL=https://mangolab.example.com
+NEXTAUTH_URL=https://mangorack.example.com
 
 # ── App
 PORT=3000

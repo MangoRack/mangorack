@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Network } from "lucide-react"
 import { WidgetWrapper } from "../WidgetWrapper"
-import { PRO_WIDGET_TYPES } from "@/types/dashboard"
+import { useLicenseStore } from "@/stores/licenseStore"
 
 interface Node {
   id: string
@@ -34,7 +34,8 @@ const STATUS_DOT: Record<string, string> = {
 }
 
 export function NetworkWidget({ id, dragHandleProps }: NetworkWidgetProps) {
-  const isPro = PRO_WIDGET_TYPES.includes("network_map")
+  const plan = useLicenseStore((s) => s.plan)
+  const isLocked = plan === "FREE"
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["network-map"],
@@ -46,7 +47,7 @@ export function NetworkWidget({ id, dragHandleProps }: NetworkWidgetProps) {
       return { services: servicesRes, nodes: nodesRes }
     },
     staleTime: 30000,
-    enabled: !isPro,
+    enabled: !isLocked,
   })
 
   const services: Service[] = Array.isArray(data?.services?.data) ? data.services.data : []
@@ -74,17 +75,19 @@ export function NetworkWidget({ id, dragHandleProps }: NetworkWidgetProps) {
       id={id}
       title="Network Map"
       icon={<Network className="w-4 h-4" />}
-      isLoading={!isPro && isLoading}
-      error={!isPro && error ? "Failed to load network data" : null}
+      isLoading={!isLocked && isLoading}
+      error={!isLocked && error ? "Failed to load network data" : null}
       onRefresh={refetch}
-      isPro={isPro}
+      isPro={isLocked}
       dragHandleProps={dragHandleProps}
     >
       <div className="space-y-4 max-h-[300px] overflow-y-auto">
         {nodes.length === 0 && ungrouped.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No nodes or services found
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Network className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No nodes or services found</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Your network topology will appear here</p>
+          </div>
         ) : (
           <>
             {Array.from(grouped.values()).map(({ node, services: nodeSvcs }) => (

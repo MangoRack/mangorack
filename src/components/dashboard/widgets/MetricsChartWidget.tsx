@@ -14,7 +14,7 @@ import {
   Legend,
 } from "recharts"
 import { WidgetWrapper } from "../WidgetWrapper"
-import { PRO_WIDGET_TYPES } from "@/types/dashboard"
+import { useLicenseStore } from "@/stores/licenseStore"
 
 interface MetricsChartWidgetProps {
   id: string
@@ -23,14 +23,15 @@ interface MetricsChartWidgetProps {
 
 export function MetricsChartWidget({ id, dragHandleProps }: MetricsChartWidgetProps) {
   const [timeRange, setTimeRange] = useState("24h")
-  const isPro = PRO_WIDGET_TYPES.includes("metrics_chart")
+  const plan = useLicenseStore((s) => s.plan)
+  const isLocked = plan === "FREE"
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["metrics-chart", timeRange],
     queryFn: () =>
       fetch(`/api/analytics?range=${timeRange}`).then((r) => r.json()),
     staleTime: 30000,
-    enabled: !isPro,
+    enabled: !isLocked,
   })
 
   const chartData: { time: string; cpu: number; memory: number }[] =
@@ -43,10 +44,10 @@ export function MetricsChartWidget({ id, dragHandleProps }: MetricsChartWidgetPr
       id={id}
       title="Metrics Chart"
       icon={<BarChart3 className="w-4 h-4" />}
-      isLoading={!isPro && isLoading}
-      error={!isPro && error ? "Failed to load metrics" : null}
+      isLoading={!isLocked && isLoading}
+      error={!isLocked && error ? "Failed to load metrics" : null}
       onRefresh={refetch}
-      isPro={isPro}
+      isPro={isLocked}
       showTimeRange
       timeRange={timeRange}
       onTimeRangeChange={setTimeRange}

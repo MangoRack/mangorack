@@ -22,8 +22,6 @@ const typeIcons: Record<string, React.ReactNode> = {
 export default function ServiceCard({ service }: ServiceCardProps) {
   const router = useRouter()
 
-  const uptimePercent = 99.9 // placeholder, would come from API enrichment
-
   return (
     <div
       onClick={() => router.push(`/services/${service.id}`)}
@@ -66,17 +64,10 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-        <span>Response: --ms</span>
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium ${
-            uptimePercent >= 99.5
-              ? "bg-green-500/10 text-green-500"
-              : uptimePercent >= 95
-                ? "bg-yellow-500/10 text-yellow-500"
-                : "bg-red-500/10 text-red-500"
-          }`}
-        >
-          {uptimePercent.toFixed(1)}% 24h
+        <span className="text-xs text-muted-foreground">
+          {service.lastCheckedAt
+            ? formatDistanceToNow(new Date(service.lastCheckedAt), { addSuffix: true })
+            : "Never checked"}
         </span>
       </div>
 
@@ -98,11 +89,6 @@ export default function ServiceCard({ service }: ServiceCardProps) {
         </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground">
-        {service.lastCheckedAt
-          ? `Checked ${formatDistanceToNow(new Date(service.lastCheckedAt), { addSuffix: true })}`
-          : "Never checked"}
-      </p>
     </div>
   )
 }

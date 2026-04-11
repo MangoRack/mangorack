@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { formatDistanceToNow, format } from "date-fns"
@@ -32,6 +32,7 @@ import ServiceForm from "@/components/services/ServiceForm"
 import type { ServiceFormValues } from "@/components/services/ServiceForm"
 import UptimeChart from "@/components/charts/UptimeChart"
 import ResponseTimeChart from "@/components/charts/ResponseTimeChart"
+import Dialog from "@/components/ui/Dialog"
 
 const TABS = [
   { key: "overview", label: "Overview", icon: Activity },
@@ -42,7 +43,15 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"]
 
-export default function ServiceDetailPage() {
+export default function ServiceDetailPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}>
+      <ServiceDetailPage />
+    </Suspense>
+  )
+}
+
+function ServiceDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -134,6 +143,13 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+        <Link href="/services" className="hover:text-foreground transition-colors">Services</Link>
+        <span>/</span>
+        <span className="text-foreground">{service.name}</span>
+      </nav>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-start gap-3">
@@ -177,7 +193,7 @@ export default function ServiceDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-12 sm:ml-0">
+        <div className="flex flex-wrap items-center gap-2 ml-12 sm:ml-0">
           <button
             onClick={handleTogglePause}
             className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
@@ -208,7 +224,7 @@ export default function ServiceDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-border">
+      <div className="sticky top-0 z-10 bg-background border-b border-border">
         <nav className="flex gap-0 -mb-px">
           {TABS.map((tab) => {
             const Icon = tab.icon
@@ -268,34 +284,32 @@ export default function ServiceDetailPage() {
       )}
 
       {/* Delete Confirm Dialog */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-card-foreground mb-2">
-              Delete &quot;{service.name}&quot;?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              This will permanently delete this service and all its monitoring
-              data, logs, and alerts. This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleteService.isPending}
-                className="inline-flex items-center justify-center rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
-              >
-                {deleteService.isPending ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title={`Delete "${service.name}"?`}
+        className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-sm w-full mx-4"
+      >
+        <p className="text-sm text-muted-foreground mb-6 mt-2">
+          This will permanently delete this service and all its monitoring
+          data, logs, and alerts. This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setShowDeleteConfirm(false)}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleteService.isPending}
+            className="inline-flex items-center justify-center rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
+          >
+            {deleteService.isPending ? "Deleting..." : "Delete"}
+          </button>
         </div>
-      )}
+      </Dialog>
     </div>
   )
 }

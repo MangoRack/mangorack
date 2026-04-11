@@ -70,13 +70,10 @@ export function LogViewer({
     enabled: !serviceId && showToolbar,
   })
 
-  const logs = Array.isArray((data as any)?.data) ? (data as any).data : ((data as any)?.data?.logs ?? [])
-  const total = (data as any)?.meta?.total ?? (data as any)?.data?.total ?? 0
+  const logs: LogEntry[] = Array.isArray(data?.data) ? data.data : []
+  const total = data?.meta?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / limit))
-  const services = (Array.isArray((servicesData as any)?.data) ? (servicesData as any).data : []) as Array<{
-    id: string
-    name: string
-  }>
+  const services: Array<{ id: string; name: string }> = Array.isArray(servicesData?.data) ? servicesData.data : []
 
   // Build service name lookup
   const serviceNames: Record<string, string> = {}
@@ -87,7 +84,7 @@ export function LogViewer({
   // Client-side level filtering when multiple levels selected
   const filteredLogs =
     filters.levels.length > 1
-      ? logs.filter((log) => filters.levels.includes(log.level))
+      ? logs.filter((log: LogEntry) => filters.levels.includes(log.level))
       : logs
 
   const handleFiltersChange = useCallback((newFilters: LogFiltersState) => {
@@ -131,7 +128,7 @@ export function LogViewer({
               </p>
             </div>
           ) : (
-            filteredLogs.map((log, i) => (
+            filteredLogs.map((log: LogEntry, i: number) => (
               <LogEntryRow
                 key={log.id}
                 log={log}

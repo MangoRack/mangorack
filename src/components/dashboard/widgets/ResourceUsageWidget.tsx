@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Cpu } from "lucide-react"
 import { WidgetWrapper } from "../WidgetWrapper"
-import { PRO_WIDGET_TYPES } from "@/types/dashboard"
+import { useLicenseStore } from "@/stores/licenseStore"
 
 interface NodeResource {
   id: string
@@ -32,13 +32,14 @@ function usageTextColor(pct: number): string {
 }
 
 export function ResourceUsageWidget({ id, dragHandleProps }: ResourceUsageWidgetProps) {
-  const isPro = PRO_WIDGET_TYPES.includes("resource_usage")
+  const plan = useLicenseStore((s) => s.plan)
+  const isLocked = plan === "FREE"
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["resource-usage"],
     queryFn: () => fetch("/api/nodes").then((r) => r.json()),
     staleTime: 30000,
-    enabled: !isPro,
+    enabled: !isLocked,
   })
 
   const nodes: NodeResource[] = Array.isArray(data) ? data : data?.nodes ?? []
@@ -48,17 +49,19 @@ export function ResourceUsageWidget({ id, dragHandleProps }: ResourceUsageWidget
       id={id}
       title="Resource Usage"
       icon={<Cpu className="w-4 h-4" />}
-      isLoading={!isPro && isLoading}
-      error={!isPro && error ? "Failed to load resource data" : null}
+      isLoading={!isLocked && isLoading}
+      error={!isLocked && error ? "Failed to load resource data" : null}
       onRefresh={refetch}
-      isPro={isPro}
+      isPro={isLocked}
       dragHandleProps={dragHandleProps}
     >
       <div className="space-y-4 max-h-[260px] overflow-y-auto">
         {nodes.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No nodes found
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Cpu className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No nodes found</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Add a node to track resource usage</p>
+          </div>
         ) : (
           nodes.map((node) => {
             const cpu = node.cpuUsage ?? node.cpu ?? 0

@@ -1,10 +1,10 @@
 # Alerts
 
-MangoLab alerts notify you when something goes wrong with your services. Configure alert rules, set severity levels, and receive notifications via email, webhooks, Discord, or Slack.
+MangoRack alerts notify you when something goes wrong with your services. Configure alert rules, set severity levels, and receive notifications via email, webhooks, Discord, or Slack.
 
 ## Alert Types
 
-MangoLab supports six alert types:
+MangoRack supports six alert types:
 
 | Type | Description | Trigger |
 |---|---|---|
@@ -131,7 +131,7 @@ The cooldown period prevents alert fatigue by suppressing repeated notifications
 
 ## Notification Channels
 
-Notifications are configured in **Settings > Notifications**. When an alert fires, MangoLab sends notifications to all configured channels.
+Notifications are configured in **Settings > Notifications**. When an alert fires, MangoRack sends notifications to all configured channels.
 
 ### Email Setup
 
@@ -139,7 +139,7 @@ Notifications are configured in **Settings > Notifications**. When an alert fire
 2. Enter your email address in the **Notification Email** field
 3. Click **Save**
 
-MangoLab sends alert emails with:
+MangoRack sends alert emails with:
 - Alert name and severity in the subject line
 - Service name and current status
 - Alert condition details
@@ -194,16 +194,16 @@ Send alert notifications to a Discord channel:
 2. Click the gear icon (Edit Channel) next to the channel name
 3. Go to **Integrations > Webhooks**
 4. Click **New Webhook**
-5. Give it a name (e.g., "MangoLab Alerts") and optionally set an avatar
+5. Give it a name (e.g., "MangoRack Alerts") and optionally set an avatar
 6. Click **Copy Webhook URL**
 
-**Step 2: Configure in MangoLab**
+**Step 2: Configure in MangoRack**
 
 1. Go to **Settings > Notifications**
 2. Paste the Discord webhook URL in the **Discord Webhook URL** field
 3. Click **Save**
 
-MangoLab will send formatted Discord embeds with color-coded severity (blue for INFO, yellow for WARNING, red for CRITICAL).
+MangoRack will send formatted Discord embeds with color-coded severity (blue for INFO, yellow for WARNING, red for CRITICAL).
 
 ### Slack Webhook Setup (PRO)
 
@@ -213,7 +213,7 @@ Send alert notifications to a Slack channel:
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps)
 2. Click **Create New App > From scratch**
-3. Name it "MangoLab" and select your workspace
+3. Name it "MangoRack" and select your workspace
 4. Click **Create App**
 
 **Step 2: Enable incoming webhooks**
@@ -225,17 +225,17 @@ Send alert notifications to a Slack channel:
 5. Click **Allow**
 6. Copy the webhook URL (it looks like `https://hooks.slack.com/services/T.../B.../xxx`)
 
-**Step 3: Configure in MangoLab**
+**Step 3: Configure in MangoRack**
 
 1. Go to **Settings > Notifications**
 2. Paste the Slack webhook URL in the **Slack Webhook URL** field
 3. Click **Save**
 
-MangoLab will send formatted Slack messages with severity-colored attachments.
+MangoRack will send formatted Slack messages with severity-colored attachments.
 
 ## Alert History and Events
 
-Every time an alert fires, MangoLab creates an **alert event** record. View alert history from:
+Every time an alert fires, MangoRack creates an **alert event** record. View alert history from:
 
 - **Alerts page**: Shows all alerts with their last fired time and event count
 - **Alert detail page**: Click an alert to see its full event history

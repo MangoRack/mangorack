@@ -52,9 +52,11 @@ const SEVERITIES = ["INFO", "WARNING", "CRITICAL"] as const
 function SeverityCheckboxes({
   values,
   onChange,
+  channelId,
 }: {
   values: string[]
   onChange: (values: string[]) => void
+  channelId: string
 }) {
   const colors: Record<string, string> = {
     INFO: "bg-blue-500",
@@ -64,31 +66,41 @@ function SeverityCheckboxes({
 
   return (
     <div className="flex items-center gap-3 mt-1">
-      {SEVERITIES.map((sev) => (
-        <label key={sev} className="flex items-center gap-1.5 cursor-pointer">
-          <div
-            className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center transition-colors ${
-              values.includes(sev)
-                ? `${colors[sev]} border-transparent`
-                : "border-muted-foreground/30 bg-transparent"
-            }`}
-            onClick={(e) => {
-              e.preventDefault()
-              const next = values.includes(sev)
-                ? values.filter((v) => v !== sev)
-                : [...values, sev]
-              onChange(next)
-            }}
-          >
-            {values.includes(sev) && (
-              <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <span className="text-xs text-muted-foreground">{sev}</span>
-        </label>
-      ))}
+      {SEVERITIES.map((sev) => {
+        const id = `${channelId}-severity-${sev.toLowerCase()}`
+        return (
+          <label key={sev} htmlFor={id} className="flex items-center gap-1.5 cursor-pointer">
+            <span className="relative inline-flex items-center justify-center h-3.5 w-3.5">
+              <input
+                id={id}
+                type="checkbox"
+                className="sr-only peer"
+                checked={values.includes(sev)}
+                onChange={() => {
+                  const next = values.includes(sev)
+                    ? values.filter((v) => v !== sev)
+                    : [...values, sev]
+                  onChange(next)
+                }}
+              />
+              <span
+                className={`absolute inset-0 rounded border-2 flex items-center justify-center transition-colors ${
+                  values.includes(sev)
+                    ? `${colors[sev]} border-transparent`
+                    : "border-muted-foreground/30 bg-transparent"
+                }`}
+              >
+                {values.includes(sev) && (
+                  <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+            </span>
+            <span className="text-xs text-muted-foreground">{sev}</span>
+          </label>
+        )
+      })}
     </div>
   )
 }
@@ -171,7 +183,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-2xl">
+    <div className="flex flex-col gap-6 max-w-2xl">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Bell className="h-6 w-6 text-primary" />
@@ -188,7 +200,7 @@ export default function NotificationsPage() {
         className="space-y-6"
       >
         {/* Email */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="rounded-lg border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
@@ -200,6 +212,9 @@ export default function NotificationsPage() {
               render={({ field }) => (
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={field.value}
+                  aria-label="Enable Email"
                   onClick={() => field.onChange(!field.value)}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
                     field.value ? "bg-green-500" : "bg-muted-foreground/30"
@@ -215,8 +230,10 @@ export default function NotificationsPage() {
             />
           </div>
           <div className="flex gap-2">
+            <label htmlFor="email-input" className="sr-only">Email address</label>
             <input
               {...register("email")}
+              id="email-input"
               type="email"
               placeholder="your@email.com"
               className={`${inputClass} flex-1`}
@@ -237,13 +254,14 @@ export default function NotificationsPage() {
               <SeverityCheckboxes
                 values={field.value}
                 onChange={field.onChange}
+                channelId="email"
               />
             )}
           />
         </div>
 
         {/* Webhook */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="rounded-lg border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-muted-foreground" />
@@ -255,6 +273,9 @@ export default function NotificationsPage() {
               render={({ field }) => (
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={field.value}
+                  aria-label="Enable Webhook"
                   onClick={() => field.onChange(!field.value)}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
                     field.value ? "bg-green-500" : "bg-muted-foreground/30"
@@ -270,8 +291,10 @@ export default function NotificationsPage() {
             />
           </div>
           <div className="flex gap-2">
+            <label htmlFor="webhook-url-input" className="sr-only">Webhook URL</label>
             <input
               {...register("webhookUrl")}
+              id="webhook-url-input"
               type="url"
               placeholder="https://your-webhook-url.com/hook"
               className={`${inputClass} flex-1`}
@@ -292,13 +315,14 @@ export default function NotificationsPage() {
               <SeverityCheckboxes
                 values={field.value}
                 onChange={field.onChange}
+                channelId="webhook"
               />
             )}
           />
         </div>
 
         {/* Discord (PRO) */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3 relative">
+        <div className="rounded-lg border border-border bg-card p-5 space-y-3 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
@@ -315,6 +339,9 @@ export default function NotificationsPage() {
               render={({ field }) => (
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={field.value}
+                  aria-label="Enable Discord"
                   onClick={() => field.onChange(!field.value)}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
                     field.value ? "bg-green-500" : "bg-muted-foreground/30"
@@ -330,8 +357,10 @@ export default function NotificationsPage() {
             />
           </div>
           <div className="flex gap-2">
+            <label htmlFor="discord-webhook-url-input" className="sr-only">Discord Webhook URL</label>
             <input
               {...register("discordWebhookUrl")}
+              id="discord-webhook-url-input"
               type="url"
               placeholder="https://discord.com/api/webhooks/..."
               className={`${inputClass} flex-1`}
@@ -352,13 +381,14 @@ export default function NotificationsPage() {
               <SeverityCheckboxes
                 values={field.value}
                 onChange={field.onChange}
+                channelId="discord"
               />
             )}
           />
         </div>
 
         {/* Slack (PRO) */}
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3 relative">
+        <div className="rounded-lg border border-border bg-card p-5 space-y-3 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
@@ -375,6 +405,9 @@ export default function NotificationsPage() {
               render={({ field }) => (
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={field.value}
+                  aria-label="Enable Slack"
                   onClick={() => field.onChange(!field.value)}
                   className={`relative w-10 h-5 rounded-full transition-colors ${
                     field.value ? "bg-green-500" : "bg-muted-foreground/30"
@@ -390,8 +423,10 @@ export default function NotificationsPage() {
             />
           </div>
           <div className="flex gap-2">
+            <label htmlFor="slack-webhook-url-input" className="sr-only">Slack Webhook URL</label>
             <input
               {...register("slackWebhookUrl")}
+              id="slack-webhook-url-input"
               type="url"
               placeholder="https://hooks.slack.com/services/..."
               className={`${inputClass} flex-1`}
@@ -412,6 +447,7 @@ export default function NotificationsPage() {
               <SeverityCheckboxes
                 values={field.value}
                 onChange={field.onChange}
+                channelId="slack"
               />
             )}
           />

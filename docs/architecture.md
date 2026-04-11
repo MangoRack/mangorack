@@ -1,6 +1,6 @@
 # Architecture
 
-Technical overview of MangoLab's architecture, data model, and design decisions.
+Technical overview of MangoRack's architecture, data model, and design decisions.
 
 ## System Architecture
 
@@ -20,7 +20,7 @@ Technical overview of MangoLab's architecture, data model, and design decisions.
                                        |
                   +--------------------+--------------------+
                   |                                         |
-                  |            MangoLab App                  |
+                  |            MangoRack App                  |
                   |         (Next.js 14 / Node.js 20)       |
                   |                                         |
                   |  +-------------+   +----------------+   |
@@ -102,7 +102,7 @@ DashboardLayout                     (standalone)
 
 ## Background Workers
 
-MangoLab runs several background workers within the Node.js process:
+MangoRack runs several background workers within the Node.js process:
 
 ### Uptime Check Worker
 
@@ -208,7 +208,7 @@ Return total ingested count
 
 ## Caching Strategy
 
-MangoLab uses Redis for caching with the following patterns:
+MangoRack uses Redis for caching with the following patterns:
 
 | Cache Key | TTL | Purpose |
 |---|---|---|
@@ -251,7 +251,7 @@ Cache invalidation:
 
 ### Data Security
 
-- All data is stored locally -- MangoLab does not phone home or send telemetry
+- All data is stored locally -- MangoRack does not phone home or send telemetry
 - No data leaves the server unless you configure external notification channels
 - Database credentials should use strong passwords
 - The `.env` file should not be committed to version control

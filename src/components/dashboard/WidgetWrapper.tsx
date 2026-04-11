@@ -75,7 +75,7 @@ export function WidgetWrapper({
 
   return (
     <div
-      className={`rounded-lg border bg-card shadow-sm flex flex-col h-full overflow-hidden ${
+      className={`rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow flex flex-col h-full overflow-hidden ${
         isEditMode ? "border-dashed border-2 border-primary/40" : "border-border"
       }`}
     >

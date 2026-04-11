@@ -130,7 +130,7 @@ export default function UptimePage() {
             </h2>
             <div className="space-y-4">
               {summaries.map((summary) => (
-                <UptimeBar key={summary.serviceId || summary.id} summary={summary} />
+                <UptimeBar key={summary.serviceId} summary={summary} />
               ))}
             </div>
           </div>
@@ -165,11 +165,11 @@ export default function UptimePage() {
               <tbody className="divide-y divide-border">
                 {summaries.map((s) => (
                   <tr
-                    key={s.serviceId || s.id}
+                    key={s.serviceId}
                     className="hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-3 text-sm font-medium text-card-foreground">
-                      {s.serviceName || s.name}
+                      {s.serviceName}
                     </td>
                     <td className="px-4 py-3">
                       <ServiceStatusBadge
@@ -297,7 +297,7 @@ function UptimeBar({ summary }: UptimeBarProps) {
   const downDays = Math.round(days * (1 - summary.uptimePercent / 100))
 
   // Deterministic "random" distribution based on serviceId hash
-  const sid = summary.serviceId || summary.id || "default"
+  const sid = summary.serviceId || "default"
   const hash = sid
     .split("")
     .reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0)
@@ -311,7 +311,7 @@ function UptimeBar({ summary }: UptimeBarProps) {
     <div className="flex items-center gap-3">
       <div className="w-32 flex-shrink-0">
         <p className="text-sm font-medium text-card-foreground truncate">
-          {summary.serviceName || summary.name}
+          {summary.serviceName}
         </p>
       </div>
       <div className="flex-1 flex items-center gap-[2px]">

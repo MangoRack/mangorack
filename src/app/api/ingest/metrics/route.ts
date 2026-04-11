@@ -35,13 +35,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = ingestSchema.parse(body);
 
-    // Validate serviceId matches or exists
-    const targetService = await prisma.service.findUnique({
-      where: { id: data.serviceId, isActive: true },
-      select: { id: true },
-    });
-    if (!targetService) {
-      throw new ApiError(400, "INVALID_SERVICE", "Target service not found");
+    // Enforce token matches target service (prevent cross-service writes)
+    if (tokenService.id !== data.serviceId) {
+      throw new ApiError(403, "FORBIDDEN", "Service token does not match target serviceId");
     }
 
     // Group metrics by name

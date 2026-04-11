@@ -2,6 +2,7 @@ import { Worker, Queue } from "bullmq";
 import redis from "@/lib/redis";
 import prisma from "@/lib/prisma";
 import { evaluateAlert, sendNotification } from "@/lib/alerts";
+import { logger } from "@/lib/logger";
 
 const QUEUE_NAME = "alert-evaluation";
 
@@ -139,7 +140,7 @@ export function createAlertWorker() {
   );
 
   worker.on("failed", (job, err) => {
-    console.error(`Alert job ${job?.id} failed:`, err.message);
+    logger.error(`Alert job ${job?.id} failed:`, err.message);
   });
 
   return worker;

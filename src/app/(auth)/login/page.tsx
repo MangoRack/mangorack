@@ -1,14 +1,8 @@
 "use client"
 
 import { Suspense, useState } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { z } from "zod"
-
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-})
 
 export default function LoginPage() {
   return (
@@ -19,23 +13,31 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const router = useRouter()
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  const callbackError = searchParams.get("error")
   const successMessage = searchParams.get("success")
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    const validation = loginSchema.safeParse({ email, password })
-    if (!validation.success) {
-      setError(validation.error.errors[0].message)
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email")
+      setIsLoading(false)
+      return
+    }
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters")
       setIsLoading(false)
       return
     }
@@ -49,13 +51,15 @@ function LoginForm() {
 
       if (result?.error) {
         setError("Invalid email or password")
-      } else {
-        router.push("/")
-        router.refresh()
+        setIsLoading(false)
+        return
       }
+
+      // Success — redirect to the callback URL or dashboard
+      router.push(callbackUrl)
+      router.refresh()
     } catch {
-      setError("An unexpected error occurred")
-    } finally {
+      setError("Something went wrong. Please try again.")
       setIsLoading(false)
     }
   }
@@ -67,7 +71,7 @@ function LoginForm() {
           <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-4">
             <span className="text-2xl font-bold text-white">M</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">MangoLab</h1>
+          <h1 className="text-2xl font-bold tracking-tight">MangoRack</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Sign in to your homelab dashboard
           </p>
@@ -79,25 +83,24 @@ function LoginForm() {
           </div>
         )}
 
-        {error && (
+        {(error || callbackError) && (
           <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-            {error}
+            {error || (callbackError === "CredentialsSignin" ? "Invalid email or password" : "Something went wrong")}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium leading-none"
-            >
+            <label htmlFor="email" className="text-sm font-medium leading-none">
               Email
             </label>
             <input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@homelab.local"
               autoComplete="email"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -106,17 +109,13 @@ function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium leading-none"
-            >
+            <label htmlFor="password" className="text-sm font-medium leading-none">
               Password
             </label>
             <input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               autoComplete="current-password"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

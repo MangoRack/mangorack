@@ -57,14 +57,14 @@ const LEVELS = ["ALL", "DEBUG", "INFO", "WARN", "ERROR"] as const
 export function LogStreamWidget({ id, dragHandleProps }: LogStreamWidgetProps) {
   const [levelFilter, setLevelFilter] = useState<string>("ALL")
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<{ data?: LogEntry[] }>({
     queryKey: ["log-stream"],
     queryFn: () => fetch("/api/logs?limit=20").then((r) => r.json()),
     staleTime: 5000,
     refetchInterval: 5000,
   })
 
-  const logs: LogEntry[] = Array.isArray((data as any)?.data) ? (data as any).data : []
+  const logs: LogEntry[] = Array.isArray(data?.data) ? data.data : []
 
   const filtered =
     levelFilter === "ALL"
@@ -102,9 +102,11 @@ export function LogStreamWidget({ id, dragHandleProps }: LogStreamWidgetProps) {
         {/* Log entries */}
         <div className="space-y-1 max-h-[240px] overflow-y-auto font-mono text-[11px]">
           {filtered.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">
-              No log entries
-            </p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <ScrollText className="h-10 w-10 text-muted-foreground/50 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">No log entries</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Logs will stream here in real time</p>
+            </div>
           ) : (
             filtered.map((log) => {
               const color = LEVEL_COLORS[log.level] ?? "text-foreground"

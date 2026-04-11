@@ -112,7 +112,7 @@ export default function SetupPage() {
           <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-4">
             <span className="text-2xl font-bold text-white">M</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">MangoLab Setup</h1>
+          <h1 className="text-2xl font-bold tracking-tight">MangoRack Setup</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Create your admin account to get started
           </p>

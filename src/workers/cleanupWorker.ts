@@ -2,6 +2,7 @@ import { Worker, Queue } from "bullmq";
 import redis from "@/lib/redis";
 import prisma from "@/lib/prisma";
 import { getLicensePlan, getRetentionDays } from "@/lib/limits";
+import { logger } from "@/lib/logger";
 
 const QUEUE_NAME = "cleanup";
 
@@ -17,7 +18,7 @@ export function createCleanupWorker() {
   const worker = new Worker(
     QUEUE_NAME,
     async (job) => {
-      console.log(`Running cleanup job: ${job.name}`);
+      logger.info(`Running cleanup job: ${job.name}`);
 
       const plan = await getLicensePlan();
       const retentionDays = getRetentionDays(plan);
@@ -29,13 +30,13 @@ export function createCleanupWorker() {
       const deletedChecks = await prisma.uptimeCheck.deleteMany({
         where: { checkedAt: { lt: retentionDate } },
       });
-      console.log(`Deleted ${deletedChecks.count} old uptime checks`);
+      logger.info(`Deleted ${deletedChecks.count} old uptime checks`);
 
       // Delete old log entries
       const deletedLogs = await prisma.logEntry.deleteMany({
         where: { timestamp: { lt: retentionDate } },
       });
-      console.log(`Deleted ${deletedLogs.count} old log entries`);
+      logger.info(`Deleted ${deletedLogs.count} old log entries`);
 
       // Compact metric points older than 7 days to hourly averages
       const sevenDaysAgo = new Date(
@@ -52,7 +53,7 @@ export function createCleanupWorker() {
       const deletedPoints = await prisma.metricPoint.deleteMany({
         where: { ts: { lt: retentionDate } },
       });
-      console.log(`Deleted ${deletedPoints.count} old metric points`);
+      logger.info(`Deleted ${deletedPoints.count} old metric points`);
 
       return {
         deletedChecks: deletedChecks.count,
@@ -67,11 +68,11 @@ export function createCleanupWorker() {
   );
 
   worker.on("failed", (job, err) => {
-    console.error(`Cleanup job ${job?.id} failed:`, err.message);
+    logger.error(`Cleanup job ${job?.id} failed:`, err.message);
   });
 
   worker.on("completed", (job, result) => {
-    console.log(`Cleanup job ${job.id} completed:`, result);
+    logger.info(`Cleanup job ${job.id} completed:`, result);
   });
 
   return worker;
@@ -136,7 +137,7 @@ async function compactMetrics(
     }
   }
 
-  console.log(`Compacted metrics to ${resolution} resolution`);
+  logger.info(`Compacted metrics to ${resolution} resolution`);
 }
 
 export async function scheduleCleanupJob() {
@@ -159,5 +160,5 @@ export async function scheduleCleanupJob() {
     }
   );
 
-  console.log("Scheduled daily cleanup job");
+  logger.info("Scheduled daily cleanup job");
 }

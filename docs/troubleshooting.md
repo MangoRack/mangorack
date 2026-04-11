@@ -78,7 +78,7 @@ Error: Can't reach database server at `db:5432`
 2. **Is the database healthy?**
 
    ```bash
-   docker compose exec db pg_isready -U mangolab
+   docker compose exec db pg_isready -U mangorack
    ```
 
 3. **Does DATABASE_URL match the credentials?**
@@ -106,7 +106,7 @@ If the database is corrupted (rare):
 docker compose down
 
 # Remove the database volume (WARNING: deletes all data)
-docker volume rm mangolab_postgres_data
+docker volume rm mangorack_postgres_data
 
 # Restart (creates a fresh database)
 docker compose up -d
@@ -147,7 +147,7 @@ Error: connect ECONNREFUSED 127.0.0.1:6379
    docker compose logs redis
    ```
 
-MangoLab will continue to function without Redis, but caching and rate limiting will be disabled.
+MangoRack will continue to function without Redis, but caching and rate limiting will be disabled.
 
 ## Authentication Issues
 
@@ -162,8 +162,8 @@ MangoLab will continue to function without Redis, but caching and rate limiting 
 This usually means `NEXTAUTH_URL` does not match the URL in your browser:
 
 ```env
-# If you access MangoLab at https://mangolab.example.com:
-NEXTAUTH_URL=https://mangolab.example.com
+# If you access MangoRack at https://mangorack.example.com:
+NEXTAUTH_URL=https://mangorack.example.com
 
 # If you access it at http://192.168.1.100:3000:
 NEXTAUTH_URL=http://192.168.1.100:3000
@@ -187,7 +187,7 @@ If you need to re-run setup:
 
 ```bash
 # Connect to the database
-docker compose exec db psql -U mangolab mangolab
+docker compose exec db psql -U mangorack mangorack
 
 # Delete the existing user(s)
 DELETE FROM "Session" WHERE 1=1;
@@ -270,7 +270,7 @@ This is expected. Log retention is 3 days on the free tier and 90 days on PRO. L
     command: postgres -c shared_buffers=128MB -c effective_cache_size=256MB
   ```
 
-- Check for large tables: `docker compose exec db psql -U mangolab mangolab -c "SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) FROM pg_catalog.pg_statio_user_tables ORDER BY pg_total_relation_size(relid) DESC;"`
+- Check for large tables: `docker compose exec db psql -U mangorack mangorack -c "SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) FROM pg_catalog.pg_statio_user_tables ORDER BY pg_total_relation_size(relid) DESC;"`
 
 ### Redis using too much memory
 
@@ -288,7 +288,7 @@ This is expected. Log retention is 3 days on the free tier and 90 days on PRO. L
 - **Check database performance**: Run `VACUUM ANALYZE` on large tables:
 
   ```bash
-  docker compose exec db psql -U mangolab mangolab -c "VACUUM ANALYZE;"
+  docker compose exec db psql -U mangorack mangorack -c "VACUUM ANALYZE;"
   ```
 
 - **Check Redis**: Ensure Redis is running -- it caches expensive queries.
@@ -296,7 +296,7 @@ This is expected. Log retention is 3 days on the free tier and 90 days on PRO. L
 ## Docker Health Check Failing
 
 ```
-container mangolab-app is unhealthy
+container mangorack-app is unhealthy
 ```
 
 The health check calls `curl -f http://localhost:3000/api/health` inside the container.
@@ -327,11 +327,11 @@ If you have forgotten the admin password, update it directly in the database:
 docker compose exec app node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('newpassword123', 12).then(h => console.log(h))"
 
 # Update the password in the database
-docker compose exec db psql -U mangolab mangolab -c \
-  "UPDATE \"User\" SET \"passwordHash\" = '\$2a\$12\$...' WHERE email = 'admin@mangolab.local';"
+docker compose exec db psql -U mangorack mangorack -c \
+  "UPDATE \"User\" SET \"passwordHash\" = '\$2a\$12\$...' WHERE email = 'admin@mangorack.local';"
 ```
 
-Replace `\$2a\$12\$...` with the actual hash output from the first command, and `admin@mangolab.local` with the admin email.
+Replace `\$2a\$12\$...` with the actual hash output from the first command, and `admin@mangorack.local` with the admin email.
 
 Then restart the app:
 
@@ -348,7 +348,7 @@ docker compose restart app
 docker compose down
 
 # Remove all data volumes
-docker volume rm mangolab_postgres_data mangolab_redis_data
+docker volume rm mangorack_postgres_data mangorack_redis_data
 
 # Restart (fresh installation)
 docker compose up -d
@@ -360,9 +360,9 @@ Navigate to `http://localhost:3000` and you will see the setup wizard again.
 
 If you cannot resolve an issue with this guide:
 
-1. **Check existing issues**: Search the [GitHub Issues](https://github.com/your-org/mangolab/issues) for similar problems
+1. **Check existing issues**: Search the [GitHub Issues](https://github.com/your-org/mangorack/issues) for similar problems
 2. **File a new issue**: Include:
-   - MangoLab version (`/api/health` response)
+   - MangoRack version (`/api/health` response)
    - Docker and Docker Compose versions
    - Relevant log output (`docker compose logs app --tail 100`)
    - Steps to reproduce the issue
@@ -373,4 +373,4 @@ If you cannot resolve an issue with this guide:
 
 - [Configuration](configuration.md) -- Review all configuration options
 - [Deployment](deployment.md) -- Production deployment best practices
-- [Architecture](architecture.md) -- Understanding MangoLab internals
+- [Architecture](architecture.md) -- Understanding MangoRack internals

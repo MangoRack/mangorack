@@ -1,17 +1,17 @@
 # API Reference
 
-Complete REST API documentation for MangoLab.
+Complete REST API documentation for MangoRack.
 
 ## Authentication
 
-MangoLab uses two authentication methods:
+MangoRack uses two authentication methods:
 
 | Method | Used For | Header |
 |---|---|---|
 | **Session-based** | Dashboard and management endpoints | Cookie-based (automatic in browser) |
 | **Token-based** | Ingestion endpoints (`/api/ingest/*`) | `X-Service-Token: <service-id>` |
 
-Session-based authentication is handled automatically when using the MangoLab web interface. For programmatic API access (PRO feature), include the session cookie obtained from the login endpoint.
+Session-based authentication is handled automatically when using the MangoRack web interface. For programmatic API access (PRO feature), include the session cookie obtained from the login endpoint.
 
 Token-based authentication uses the service ID as a bearer token in the `X-Service-Token` header. This is used exclusively for log and metric ingestion.
 
@@ -81,7 +81,7 @@ X-Service-Token: <service-id>
 
 #### GET /api/health
 
-Check the health of MangoLab and its dependencies.
+Check the health of MangoRack and its dependencies.
 
 - **Auth required:** No
 - **Query params:** None

@@ -1,6 +1,6 @@
 # Deployment
 
-This guide covers deploying MangoLab in production with HTTPS, reverse proxies, backups, and updates.
+This guide covers deploying MangoRack in production with HTTPS, reverse proxies, backups, and updates.
 
 ## Docker Compose Production Setup
 
@@ -16,7 +16,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"  # Bind to localhost only (proxy handles external traffic)
     environment:
-      - DATABASE_URL=postgresql://mangolab:${POSTGRES_PASSWORD}@db:5432/mangolab
+      - DATABASE_URL=postgresql://mangorack:${POSTGRES_PASSWORD}@db:5432/mangorack
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
@@ -42,13 +42,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=mangolab
-      - POSTGRES_USER=mangolab
+      - POSTGRES_DB=mangorack
+      - POSTGRES_USER=mangorack
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mangolab"]
+      test: ["CMD-SHELL", "pg_isready -U mangorack"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,16 +86,16 @@ Key differences from development:
 ```nginx
 server {
     listen 80;
-    server_name mangolab.example.com;
+    server_name mangorack.example.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name mangolab.example.com;
+    server_name mangorack.example.com;
 
-    ssl_certificate /etc/letsencrypt/live/mangolab.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/mangolab.example.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/mangorack.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mangorack.example.com/privkey.pem;
 
     # SSL configuration
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -130,10 +130,10 @@ services:
   app:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mangolab.rule=Host(`mangolab.example.com`)"
-      - "traefik.http.routers.mangolab.entrypoints=websecure"
-      - "traefik.http.routers.mangolab.tls.certresolver=letsencrypt"
-      - "traefik.http.services.mangolab.loadbalancer.server.port=3000"
+      - "traefik.http.routers.mangorack.rule=Host(`mangorack.example.com`)"
+      - "traefik.http.routers.mangorack.entrypoints=websecure"
+      - "traefik.http.routers.mangorack.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mangorack.loadbalancer.server.port=3000"
     networks:
       - traefik
       - default
@@ -148,7 +148,7 @@ Remove the `ports` mapping since Traefik handles routing directly.
 ### Caddy
 
 ```
-mangolab.example.com {
+mangorack.example.com {
     reverse_proxy localhost:3000
 }
 ```
@@ -164,7 +164,7 @@ Caddy automatically obtains and renews SSL certificates via Let's Encrypt.
 sudo apt install certbot python3-certbot-nginx
 
 # Obtain certificate
-sudo certbot --nginx -d mangolab.example.com
+sudo certbot --nginx -d mangorack.example.com
 
 # Auto-renewal is configured automatically
 # Verify with:
@@ -187,23 +187,23 @@ certificatesResolvers:
 
 ## Custom Domain Configuration
 
-1. **Set up DNS**: Create an A record pointing `mangolab.example.com` to your server's IP address.
+1. **Set up DNS**: Create an A record pointing `mangorack.example.com` to your server's IP address.
 
 2. **Update NEXTAUTH_URL**: Set it to your custom domain in `.env`:
 
    ```env
-   NEXTAUTH_URL=https://mangolab.example.com
+   NEXTAUTH_URL=https://mangorack.example.com
    ```
 
 3. **Configure reverse proxy**: Use one of the configurations above.
 
-4. **Restart MangoLab**:
+4. **Restart MangoRack**:
 
    ```bash
    docker compose down && docker compose up -d
    ```
 
-## Updating MangoLab
+## Updating MangoRack
 
 To update to the latest version:
 
@@ -246,20 +246,20 @@ docker compose up -d
 
 ```bash
 # Create a SQL dump
-docker compose exec db pg_dump -U mangolab mangolab > backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec db pg_dump -U mangorack mangorack > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Compressed backup
-docker compose exec db pg_dump -U mangolab mangolab | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+docker compose exec db pg_dump -U mangorack mangorack | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 ### Database Restore
 
 ```bash
 # Restore from SQL dump
-docker compose exec -T db psql -U mangolab mangolab < backup_20260115_103000.sql
+docker compose exec -T db psql -U mangorack mangorack < backup_20260115_103000.sql
 
 # Restore from compressed backup
-gunzip -c backup_20260115_103000.sql.gz | docker compose exec -T db psql -U mangolab mangolab
+gunzip -c backup_20260115_103000.sql.gz | docker compose exec -T db psql -U mangorack mangorack
 ```
 
 ### Redis Data Backup
@@ -276,18 +276,18 @@ docker cp $(docker compose ps -q redis):/data/dump.rdb ./redis_backup_$(date +%Y
 
 ```bash
 #!/bin/bash
-# backup-mangolab.sh -- Full backup of MangoLab data
+# backup-mangorack.sh -- Full backup of MangoRack data
 
 set -euo pipefail
 
 BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-echo "Backing up MangoLab..."
+echo "Backing up MangoRack..."
 
 # 1. Database
 echo "  Backing up PostgreSQL..."
-docker compose exec -T db pg_dump -U mangolab mangolab | gzip > "$BACKUP_DIR/postgres.sql.gz"
+docker compose exec -T db pg_dump -U mangorack mangorack | gzip > "$BACKUP_DIR/postgres.sql.gz"
 
 # 2. Redis
 echo "  Backing up Redis..."
@@ -311,22 +311,22 @@ Schedule with cron:
 
 ```cron
 # Daily backup at 2 AM
-0 2 * * * /path/to/mangolab/backup-mangolab.sh >> /var/log/mangolab-backup.log 2>&1
+0 2 * * * /path/to/mangorack/backup-mangorack.sh >> /var/log/mangorack-backup.log 2>&1
 ```
 
-## Monitoring MangoLab Itself
+## Monitoring MangoRack Itself
 
-Use the health endpoint to monitor MangoLab from an external monitoring tool (e.g., UptimeRobot, Healthchecks.io):
+Use the health endpoint to monitor MangoRack from an external monitoring tool (e.g., UptimeRobot, Healthchecks.io):
 
 ```
-GET https://mangolab.example.com/api/health
+GET https://mangorack.example.com/api/health
 ```
 
 - Returns `200` when healthy, `503` when degraded
 - Checks both database and Redis connectivity
 - No authentication required
 
-You can also add MangoLab as a service within itself for uptime tracking.
+You can also add MangoRack as a service within itself for uptime tracking.
 
 ## Resource Requirements at Scale
 
@@ -345,7 +345,7 @@ Factors that increase resource usage:
 
 ## Multi-Instance Considerations
 
-MangoLab is designed to run as a single instance. If you need high availability:
+MangoRack is designed to run as a single instance. If you need high availability:
 
 - **Database**: Use a managed PostgreSQL service with built-in replication (or set up PostgreSQL streaming replication)
 - **Redis**: Use Redis Sentinel or a managed Redis service

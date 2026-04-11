@@ -49,13 +49,13 @@ function getSeverityBorder(severity: string) {
 }
 
 export function AlertsWidget({ id, dragHandleProps }: AlertsWidgetProps) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<{ data?: Alert[] }>({
     queryKey: ["alerts-feed"],
     queryFn: () => fetch("/api/alerts").then((r) => r.json()),
     staleTime: 30000,
   })
 
-  const alerts: Alert[] = (Array.isArray((data as any)?.data) ? (data as any).data : []).slice(0, 10)
+  const alerts: Alert[] = (Array.isArray(data?.data) ? data.data : []).slice(0, 10)
 
   return (
     <WidgetWrapper
@@ -69,9 +69,11 @@ export function AlertsWidget({ id, dragHandleProps }: AlertsWidgetProps) {
     >
       <div className="space-y-2">
         {alerts.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No recent alerts
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Bell className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No recent alerts</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">All quiet -- alerts will show up here</p>
+          </div>
         ) : (
           <div className="space-y-1.5 max-h-[280px] overflow-y-auto">
             {alerts.map((alert) => {

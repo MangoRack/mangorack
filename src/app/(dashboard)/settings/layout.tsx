@@ -22,16 +22,16 @@ export default function SettingsLayout({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your MangoLab configuration.
+          Manage your MangoRack configuration.
         </p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar nav */}
         <nav className="md:w-48 shrink-0">
-          <ul className="flex md:flex-col gap-1">
+          <ul className="flex overflow-x-auto md:flex-col md:overflow-visible gap-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = pathname === href
               return (

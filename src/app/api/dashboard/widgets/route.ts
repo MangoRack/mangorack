@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { requireAuth, errorResponse } from "@/lib/auth-helpers";
 
 const WIDGETS = [
   { id: "uptime-overview", name: "Uptime Overview", description: "Summary of all service uptime percentages", category: "monitoring", minW: 6, minH: 3, defaultW: 12, defaultH: 4, proOnly: false },
@@ -14,6 +16,24 @@ const WIDGETS = [
 ];
 
 export async function GET() {
-  const widgets = WIDGETS.map((w) => ({ ...w, available: true }));
-  return NextResponse.json({ data: widgets });
+  try {
+    await requireAuth();
+
+    const license = await prisma.license.findFirst({
+      where: { isValid: true },
+      select: { plan: true },
+    });
+
+    const isPro = license?.plan === "PRO" || license?.plan === "LIFETIME";
+
+    const widgets = WIDGETS.map((w) => ({
+      ...w,
+      available: w.proOnly ? isPro : true,
+    }));
+
+    return NextResponse.json({ data: widgets });
+  } catch (err) {
+    const { status, body } = errorResponse(err);
+    return NextResponse.json(body, { status });
+  }
 }

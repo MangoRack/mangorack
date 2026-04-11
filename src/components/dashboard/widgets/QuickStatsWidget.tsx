@@ -4,13 +4,19 @@ import { useQuery } from "@tanstack/react-query"
 import { Activity, Server, AlertTriangle, Clock } from "lucide-react"
 import { WidgetWrapper } from "../WidgetWrapper"
 
+interface QuickStatsData {
+  services: { data?: Array<{ id: string }> } | null
+  uptime: { data?: { summaries?: Array<{ uptimePercent?: number; avgResponseTime?: number }> } } | null
+  alerts: { data?: Array<{ resolvedAt?: string | null }> } | null
+}
+
 interface QuickStatsWidgetProps {
   id: string
   dragHandleProps?: Record<string, unknown>
 }
 
 export function QuickStatsWidget({ id, dragHandleProps }: QuickStatsWidgetProps) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<QuickStatsData>({
     queryKey: ["quick-stats"],
     queryFn: async () => {
       const [servicesRes, uptimeRes, alertsRes] = await Promise.allSettled([
@@ -28,14 +34,14 @@ export function QuickStatsWidget({ id, dragHandleProps }: QuickStatsWidgetProps)
 
   const servicesList = Array.isArray(data?.services?.data) ? data.services.data : []
   const serviceCount = servicesList.length
-  const uptimeSummaries = data?.uptime?.data?.summaries ?? []
-  const uptimePercent = Array.isArray(uptimeSummaries) && uptimeSummaries.length > 0
-    ? (uptimeSummaries.reduce((acc: number, s: any) => acc + (s.uptimePercent ?? 0), 0) / uptimeSummaries.length)
+  const uptimeSummaries: Array<{ uptimePercent?: number; avgResponseTime?: number }> = data?.uptime?.data?.summaries ?? []
+  const uptimePercent = uptimeSummaries.length > 0
+    ? (uptimeSummaries.reduce((acc: number, s) => acc + (s.uptimePercent ?? 0), 0) / uptimeSummaries.length)
     : null
-  const alertsList = Array.isArray(data?.alerts?.data) ? data.alerts.data : []
-  const alertCount = alertsList.filter((a: any) => !a.resolvedAt).length
-  const avgResponse = Array.isArray(uptimeSummaries) && uptimeSummaries.length > 0
-    ? Math.round(uptimeSummaries.reduce((acc: number, s: any) => acc + (s.avgResponseTime ?? 0), 0) / uptimeSummaries.length)
+  const alertsList: Array<{ resolvedAt?: string | null }> = Array.isArray(data?.alerts?.data) ? data.alerts.data : []
+  const alertCount = alertsList.filter((a) => !a.resolvedAt).length
+  const avgResponse = uptimeSummaries.length > 0
+    ? Math.round(uptimeSummaries.reduce((acc: number, s) => acc + (s.avgResponseTime ?? 0), 0) / uptimeSummaries.length)
     : null
 
   const stats = [

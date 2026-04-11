@@ -59,7 +59,7 @@ export default function NodesPage() {
       const res = await fetch("/api/nodes")
       if (!res.ok) throw new Error("Failed to fetch nodes")
       const data = await res.json()
-      setNodes(data.nodes || data)
+      setNodes(Array.isArray(data.data) ? data.data : data.data?.nodes || [])
     } catch {
       toast.error("Failed to load nodes.")
     } finally {
@@ -156,7 +156,7 @@ export default function NodesPage() {
         {/* Blurred placeholder grid */}
         <div className="filter blur-sm pointer-events-none select-none">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Nodes</h2>
+            <h1 className="text-2xl font-bold text-foreground">Nodes</h1>
             <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
               Add Node
             </button>
@@ -165,7 +165,7 @@ export default function NodesPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="rounded-lg border border-border bg-card p-4 space-y-3"
+                className="rounded-lg border border-border bg-card p-5 space-y-3"
               >
                 <div className="h-5 w-32 bg-muted rounded" />
                 <div className="h-4 w-24 bg-muted rounded" />
@@ -206,7 +206,7 @@ export default function NodesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Nodes</h2>
+          <h1 className="text-2xl font-bold text-foreground">Nodes</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage your homelab hardware and virtual machines.
           </p>
@@ -224,7 +224,7 @@ export default function NodesPage() {
       {showForm && (
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-sm font-semibold text-foreground">
               {editingNode ? "Edit Node" : "Add Node"}
             </h3>
             <button
@@ -399,11 +399,11 @@ export default function NodesPage() {
           {nodes.map((node) => (
             <div
               key={node.id}
-              className="rounded-lg border border-border bg-card p-4 space-y-3 hover:border-primary/50 transition-colors cursor-pointer"
+              className="rounded-lg border border-border bg-card p-5 space-y-3 hover:border-primary/50 transition-colors cursor-pointer"
               onClick={() => openEditForm(node)}
             >
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-foreground">{node.name}</h4>
+                <h3 className="text-sm font-semibold text-foreground">{node.name}</h3>
                 <span
                   className={cn(
                     "text-[10px] font-semibold uppercase px-2 py-0.5 rounded",

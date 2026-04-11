@@ -1,10 +1,10 @@
 # Metrics
 
-MangoLab allows you to ingest, store, and visualize custom numeric metrics for your services. Track CPU usage, memory consumption, request counts, queue depths, or any other numeric measurement. Metric ingestion is a **PRO feature**.
+MangoRack allows you to ingest, store, and visualize custom numeric metrics for your services. Track CPU usage, memory consumption, request counts, queue depths, or any other numeric measurement. Metric ingestion is a **PRO feature**.
 
 ## What Metrics Can Be Tracked
 
-Metrics in MangoLab are organized as **metric series**, where each series is a named time series of numeric data points associated with a service. Examples:
+Metrics in MangoRack are organized as **metric series**, where each series is a named time series of numeric data points associated with a service. Examples:
 
 | Metric Name | Unit | Description |
 |---|---|---|
@@ -95,7 +95,7 @@ X-Service-Token: <service-id>
 
 ### How Metric Series Work
 
-When you ingest metrics, MangoLab automatically manages metric series:
+When you ingest metrics, MangoRack automatically manages metric series:
 
 1. **First ingestion** of a new metric name for a service creates a new `MetricSeries` record with the name and unit.
 2. **Subsequent ingestions** with the same metric name append data points to the existing series.
@@ -161,12 +161,12 @@ curl -X POST http://localhost:3000/api/ingest/metrics \
 #### Node.js
 
 ```javascript
-const MANGOLAB_URL = "http://localhost:3000";
+const MANGORACK_URL = "http://localhost:3000";
 const SERVICE_TOKEN = "clxxxxxxxxxxxxxxxxxx";
 const SERVICE_ID = "clxxxxxxxxxxxxxxxxxx";
 
 async function sendMetrics(metrics) {
-  const response = await fetch(`${MANGOLAB_URL}/api/ingest/metrics`, {
+  const response = await fetch(`${MANGORACK_URL}/api/ingest/metrics`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -199,13 +199,13 @@ import psutil
 import time
 from datetime import datetime
 
-MANGOLAB_URL = "http://localhost:3000"
+MANGORACK_URL = "http://localhost:3000"
 SERVICE_TOKEN = "clxxxxxxxxxxxxxxxxxx"
 SERVICE_ID = "clxxxxxxxxxxxxxxxxxx"
 
 def send_metrics(metrics):
     response = requests.post(
-        f"{MANGOLAB_URL}/api/ingest/metrics",
+        f"{MANGORACK_URL}/api/ingest/metrics",
         headers={
             "Content-Type": "application/json",
             "X-Service-Token": SERVICE_TOKEN,
@@ -229,9 +229,9 @@ while True:
 
 ```bash
 #!/bin/bash
-# push-metrics.sh -- Push system metrics to MangoLab
+# push-metrics.sh -- Push system metrics to MangoRack
 
-MANGOLAB_URL="http://localhost:3000"
+MANGORACK_URL="http://localhost:3000"
 SERVICE_TOKEN="clxxxxxxxxxxxxxxxxxx"
 SERVICE_ID="clxxxxxxxxxxxxxxxxxx"
 
@@ -239,7 +239,7 @@ CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%//')
 MEM=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100.0}')
 DISK=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
 
-curl -s -X POST "$MANGOLAB_URL/api/ingest/metrics" \
+curl -s -X POST "$MANGORACK_URL/api/ingest/metrics" \
   -H "Content-Type: application/json" \
   -H "X-Service-Token: $SERVICE_TOKEN" \
   -d "{
@@ -270,7 +270,7 @@ Navigate to a service's detail page and click the **Metrics** tab to view charts
 
 ## Metric Aggregation and Compaction
 
-For performance, MangoLab aggregates older metric data:
+For performance, MangoRack aggregates older metric data:
 
 - **Raw data**: Individual data points are retained for recent data
 - **1-minute aggregates**: After 24 hours, data is compacted to 1-minute averages

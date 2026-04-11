@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -14,13 +14,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUIStore } from "@/stores/uiStore"
 import { useLicenseStore } from "@/stores/licenseStore"
 import { ThemeToggle } from "./ThemeToggle"
 
-const SIDEBAR_STORAGE_KEY = "mangolab-sidebar-collapsed"
+const SIDEBAR_STORAGE_KEY = "mangorack-sidebar-collapsed"
 
 interface NavItem {
   label: string
@@ -47,6 +49,12 @@ export function Sidebar() {
   const pathname = usePathname()
   const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useUIStore()
   const plan = useLicenseStore((s) => s.plan)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
@@ -66,11 +74,11 @@ export function Sidebar() {
     return pathname.startsWith(href)
   }
 
-  return (
+  const SidebarInner = ({ mobile = false }: { mobile?: boolean }) => (
     <aside
       className={cn(
         "flex flex-col border-r border-border bg-card transition-all duration-200 h-full",
-        sidebarCollapsed ? "w-16" : "w-64"
+        mobile ? "w-64" : sidebarCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo */}
@@ -80,13 +88,13 @@ export function Sidebar() {
           sidebarCollapsed ? "justify-center px-2" : "px-4 gap-3"
         )}
       >
-        <span className="text-2xl" role="img" aria-label="MangoLab">
+        <span className="text-2xl" role="img" aria-label="MangoRack">
           🥭
         </span>
         {!sidebarCollapsed && (
           <div className="flex flex-col">
             <span className="font-bold text-foreground text-lg leading-tight">
-              MangoLab
+              MangoRack
             </span>
             <span
               className={cn(
@@ -181,5 +189,48 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+  )
+
+  return (
+    <div className="shrink-0">
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-50 rounded-md p-2 bg-card border border-border text-foreground md:hidden"
+        aria-label="Open sidebar"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile slide-in sidebar */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-4 z-10 rounded-md p-1 text-muted-foreground hover:text-foreground"
+          aria-label="Close sidebar"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <SidebarInner mobile />
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex">
+        <SidebarInner />
+      </div>
+    </div>
   )
 }

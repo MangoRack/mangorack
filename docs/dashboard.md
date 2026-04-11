@@ -1,10 +1,10 @@
 # Dashboard
 
-The MangoLab dashboard is your central control panel for monitoring your homelab. It is fully customizable with draggable widgets that can be arranged and sized to suit your workflow.
+The MangoRack dashboard is your central control panel for monitoring your homelab. It is fully customizable with draggable widgets that can be arranged and sized to suit your workflow.
 
 ## Widget Types
 
-MangoLab provides 12 widget types:
+MangoRack provides 12 widget types:
 
 | Widget | Description | Size Options |
 |---|---|---|
@@ -102,7 +102,7 @@ To set a default dashboard:
 
 ## Default Layout
 
-On first login, MangoLab provides a default layout with:
+On first login, MangoRack provides a default layout with:
 
 - **Quick Stats** widget (small) -- Total services, active alerts, average uptime
 - **Service List** widget (large) -- All services with status

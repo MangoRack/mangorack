@@ -1,8 +1,9 @@
 import { prisma } from "./prisma"
 import { redis } from "./redis"
+import { logger } from "./logger"
 
 const LICENSE_API = process.env.LICENSE_API_URL || "https://api.mangorack.dev/v1/license"
-const CACHE_TTL = 3600 // 1 hour
+const CACHE_TTL = 300 // 5 minutes
 const CACHE_KEY_PREFIX = "license:"
 const PLAN_CACHE_KEY = "license:current_plan"
 
@@ -26,9 +27,14 @@ export async function validateLicenseKey(
     }
   }
 
-  // Check Redis cache
+  // Check Redis cache (with timeout to avoid hanging when Redis is down)
   try {
-    const cached = await redis.get(`${CACHE_KEY_PREFIX}${formatted}`)
+    const cached = await Promise.race([
+      redis.get(`${CACHE_KEY_PREFIX}${formatted}`),
+      new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error("Redis timeout")), 2000)
+      ),
+    ])
     if (cached) {
       return JSON.parse(cached)
     }
@@ -47,17 +53,17 @@ export async function validateLicenseKey(
     })
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
+      const errorData: { error?: string } = await res.json().catch(() => ({}))
       result = {
         valid: false,
         plan: "FREE",
-        error: (errorData as any).error || "License validation failed",
+        error: errorData.error || "License validation failed",
       }
     } else {
-      const data = await res.json() as any
+      const data: { valid?: boolean; plan?: string; expiresAt?: string; error?: string } = await res.json()
       result = {
         valid: data.valid === true,
-        plan: data.plan || "FREE",
+        plan: (data.plan as LicenseValidationResult["plan"]) || "FREE",
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
         error: data.error,
       }
@@ -115,20 +121,27 @@ export async function validateLicenseKey(
         },
       })
     } catch (error) {
-      console.error("Failed to store license:", error)
+      logger.error("Failed to store license:", error)
     }
   }
 
-  // Cache result
+  // Cache result (fire-and-forget, don't block on Redis)
   try {
-    await redis.setex(
-      `${CACHE_KEY_PREFIX}${formatted}`,
-      CACHE_TTL,
-      JSON.stringify(result)
-    )
-    if (result.valid) {
-      await redis.setex(PLAN_CACHE_KEY, CACHE_TTL, result.plan)
-    }
+    Promise.race([
+      (async () => {
+        await redis.setex(
+          `${CACHE_KEY_PREFIX}${formatted}`,
+          CACHE_TTL,
+          JSON.stringify(result)
+        )
+        if (result.valid) {
+          await redis.setex(PLAN_CACHE_KEY, CACHE_TTL, result.plan)
+        }
+      })(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Redis timeout")), 2000)
+      ),
+    ]).catch(() => {})
   } catch {
     // Redis unavailable
   }
@@ -139,9 +152,14 @@ export async function validateLicenseKey(
 export async function getCurrentLicensePlan(): Promise<
   "FREE" | "PRO" | "LIFETIME"
 > {
-  // Check Redis cache first
+  // Check Redis cache first (with timeout to avoid hanging when Redis is down)
   try {
-    const cached = await redis.get(PLAN_CACHE_KEY)
+    const cached = await Promise.race([
+      redis.get(PLAN_CACHE_KEY),
+      new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error("Redis timeout")), 2000)
+      ),
+    ])
     if (cached === "PRO" || cached === "LIFETIME") {
       return cached
     }
@@ -163,7 +181,7 @@ export async function getCurrentLicensePlan(): Promise<
       const plan = license.plan as "FREE" | "PRO" | "LIFETIME"
       if (plan === "PRO" || plan === "LIFETIME") {
         try {
-          await redis.setex(PLAN_CACHE_KEY, CACHE_TTL, plan)
+          redis.setex(PLAN_CACHE_KEY, CACHE_TTL, plan).catch(() => {})
         } catch {
           // Redis unavailable
         }
@@ -171,7 +189,7 @@ export async function getCurrentLicensePlan(): Promise<
       }
     }
   } catch (error) {
-    console.error("Failed to check license:", error)
+    logger.error("Failed to check license:", error)
   }
 
   return "FREE"

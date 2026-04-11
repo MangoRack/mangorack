@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import redis from "@/lib/redis";
 import { ApiError, errorResponse } from "@/lib/auth-helpers";
 import { getLicensePlan } from "@/lib/limits";
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
         message: entry.message,
         source: entry.source,
         timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date(),
-        metadata: (entry.metadata as any) ?? undefined,
+        metadata: (entry.metadata as Prisma.InputJsonValue) ?? undefined,
       })),
     });
 

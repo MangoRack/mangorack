@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through installing and running MangoLab for the first time.
+This guide walks you through installing and running MangoRack for the first time.
 
 ## System Requirements
 
@@ -13,15 +13,15 @@ This guide walks you through installing and running MangoLab for the first time.
 | **CPU** | 1 core | 2+ cores |
 | **OS** | Any Docker-supported OS | Linux (Debian/Ubuntu) |
 
-MangoLab runs entirely in Docker containers. You do not need Node.js, PostgreSQL, or Redis installed on your host machine.
+MangoRack runs entirely in Docker containers. You do not need Node.js, PostgreSQL, or Redis installed on your host machine.
 
 ## Quick Start
 
 ### Step 1: Clone and Configure
 
 ```bash
-git clone https://github.com/your-org/mangolab.git
-cd mangolab
+git clone https://github.com/your-org/mangorack.git
+cd mangorack
 cp .env.example .env
 ```
 
@@ -43,19 +43,19 @@ POSTGRES_PASSWORD=<choose a strong database password>
 
 > **Important:** `NEXTAUTH_SECRET` must be at least 32 characters long. It is used to encrypt user sessions.
 
-### Step 3: Start MangoLab
+### Step 3: Start MangoRack
 
 ```bash
 docker compose up -d
 ```
 
-Docker will pull the required images (PostgreSQL 16, Redis 7, and the MangoLab app), run database migrations automatically, and start all services.
+Docker will pull the required images (PostgreSQL 16, Redis 7, and the MangoRack app), run database migrations automatically, and start all services.
 
 Wait about 30-60 seconds for everything to initialize, then open [http://localhost:3000](http://localhost:3000).
 
 ## First-Run Setup Wizard
 
-On the very first launch, MangoLab redirects you to the setup wizard at `/setup`. The wizard guides you through:
+On the very first launch, MangoRack redirects you to the setup wizard at `/setup`. The wizard guides you through:
 
 1. **Create Admin Account** -- Enter your email address, display name, and a strong password. This will be the primary administrator account.
 2. **Configure Basics** -- Choose your default theme (light, dark, or system) and preferred time range for dashboards.
@@ -66,7 +66,7 @@ After completing the wizard, you will be redirected to the main dashboard.
 
 ## Verifying the Installation
 
-Check that MangoLab is running correctly by hitting the health endpoint:
+Check that MangoRack is running correctly by hitting the health endpoint:
 
 ```bash
 curl http://localhost:3000/api/health

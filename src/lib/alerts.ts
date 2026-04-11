@@ -1,5 +1,23 @@
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import type { Alert, AlertEvent, UserSettings } from "@prisma/client";
+
+function isValidWebhookUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    if (!["https:", "http:"].includes(url.protocol)) return false;
+    const hostname = url.hostname;
+    // Block private/internal IPs and metadata endpoints
+    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") return false;
+    if (hostname.startsWith("10.") || hostname.startsWith("192.168.")) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (hostname === "169.254.169.254") return false;
+    if (hostname === "metadata.google.internal") return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 interface AlertCondition {
   operator?: "gt" | "lt" | "eq" | "gte" | "lte" | "contains" | "matches";
@@ -122,7 +140,7 @@ export async function sendNotification(
   if (settings?.notifyWebhook) {
     promises.push(
       sendWebhook(settings.notifyWebhook, payload).catch((err) =>
-        console.error("Webhook notification failed:", err)
+        logger.error("Webhook notification failed:", err)
       )
     );
   }
@@ -131,7 +149,7 @@ export async function sendNotification(
   if (settings?.notifyDiscordWebhook) {
     promises.push(
       sendDiscord(settings.notifyDiscordWebhook, alert, event).catch((err) =>
-        console.error("Discord notification failed:", err)
+        logger.error("Discord notification failed:", err)
       )
     );
   }
@@ -140,7 +158,7 @@ export async function sendNotification(
   if (settings?.notifySlackWebhook) {
     promises.push(
       sendSlack(settings.notifySlackWebhook, alert, event).catch((err) =>
-        console.error("Slack notification failed:", err)
+        logger.error("Slack notification failed:", err)
       )
     );
   }
@@ -152,6 +170,10 @@ async function sendWebhook(
   url: string,
   payload: Record<string, unknown>
 ): Promise<void> {
+  if (!isValidWebhookUrl(url)) {
+    logger.warn("Blocked webhook to disallowed URL:", url);
+    return;
+  }
   await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -164,6 +186,10 @@ async function sendDiscord(
   alert: Alert,
   event: AlertEvent
 ): Promise<void> {
+  if (!isValidWebhookUrl(webhookUrl)) {
+    logger.warn("Blocked Discord webhook to disallowed URL:", webhookUrl);
+    return;
+  }
   const severityColors: Record<string, number> = {
     INFO: 0x3498db,
     WARNING: 0xf39c12,
@@ -184,7 +210,7 @@ async function sendDiscord(
             { name: "Severity", value: alert.severity, inline: true },
           ],
           timestamp: event.firedAt,
-          footer: { text: "MangoLab Alert System" },
+          footer: { text: "MangoRack Alert System" },
         },
       ],
     }),
@@ -196,6 +222,10 @@ async function sendSlack(
   alert: Alert,
   event: AlertEvent
 ): Promise<void> {
+  if (!isValidWebhookUrl(webhookUrl)) {
+    logger.warn("Blocked Slack webhook to disallowed URL:", webhookUrl);
+    return;
+  }
   const severityEmoji: Record<string, string> = {
     INFO: ":information_source:",
     WARNING: ":warning:",

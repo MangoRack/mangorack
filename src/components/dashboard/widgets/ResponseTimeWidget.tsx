@@ -53,8 +53,10 @@ export function ResponseTimeWidget({ id, dragHandleProps }: ResponseTimeWidgetPr
       dragHandleProps={dragHandleProps}
     >
       {chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
-          No response time data yet
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Timer className="h-10 w-10 text-muted-foreground/50 mb-3" />
+          <p className="text-sm font-medium text-muted-foreground">No response time data yet</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Data will appear after the first health check</p>
         </div>
       ) : (
         <div className="h-[220px] w-full">

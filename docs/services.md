@@ -1,10 +1,10 @@
 # Services
 
-Services are the core concept in MangoLab. A service represents anything you want to monitor -- a web application, database, API, network device, or any other infrastructure component.
+Services are the core concept in MangoRack. A service represents anything you want to monitor -- a web application, database, API, network device, or any other infrastructure component.
 
 ## What is a Service
 
-A service in MangoLab has:
+A service in MangoRack has:
 - A **name** and optional description
 - A **type** that determines how it is monitored (HTTP, HTTPS, TCP, PING, DNS, Custom)
 - A **URL or hostname** used for uptime checks
@@ -30,7 +30,7 @@ A service in MangoLab has:
 4. Configure monitoring settings (see below).
 5. Click **Save** to create the service.
 
-MangoLab will immediately begin monitoring the service based on your configuration.
+MangoRack will immediately begin monitoring the service based on your configuration.
 
 ## Service Types
 
@@ -97,7 +97,7 @@ Each service has monitoring settings that control how uptime checks work:
 
 ### Setting the Check Interval
 
-The check interval determines how frequently MangoLab sends a request to your service:
+The check interval determines how frequently MangoRack sends a request to your service:
 
 - **Free tier**: Minimum interval is 60 seconds
 - **PRO tier**: Minimum interval is 10 seconds
@@ -206,7 +206,7 @@ To permanently delete a service:
 
 - Use PING type for routers, switches, and other network devices
 - A 60-second interval is typically sufficient
-- Monitor from the MangoLab server's network perspective -- ensure the devices are reachable
+- Monitor from the MangoRack server's network perspective -- ensure the devices are reachable
 
 ### External Services
 

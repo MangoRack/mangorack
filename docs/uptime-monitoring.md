@@ -1,10 +1,10 @@
 # Uptime Monitoring
 
-MangoLab continuously monitors your services and tracks their availability over time. This guide explains how uptime monitoring works and how to get the most out of it.
+MangoRack continuously monitors your services and tracks their availability over time. This guide explains how uptime monitoring works and how to get the most out of it.
 
 ## How Uptime Checks Work
 
-MangoLab runs a background scheduler that performs uptime checks on each active service based on its configured interval. Here is what happens during each check:
+MangoRack runs a background scheduler that performs uptime checks on each active service based on its configured interval. Here is what happens during each check:
 
 1. **Scheduler triggers** -- When a service's check interval has elapsed since its last check, the scheduler queues a new check.
 2. **Check executes** -- Depending on the service type:
@@ -18,7 +18,7 @@ MangoLab runs a background scheduler that performs uptime checks on each active 
 
 ## Check Intervals and Scheduling
 
-The check interval determines how frequently MangoLab tests each service:
+The check interval determines how frequently MangoRack tests each service:
 
 | Plan | Minimum Interval | Recommended |
 |---|---|---|
@@ -46,7 +46,7 @@ Uptime percentage is calculated as:
 uptime_percentage = (successful_checks / total_checks) * 100
 ```
 
-MangoLab calculates uptime over several time windows:
+MangoRack calculates uptime over several time windows:
 
 | Window | Description |
 |---|---|
@@ -91,7 +91,7 @@ The uptime page provides a bird's-eye view of all your services:
 
 ## Incident Detection and Tracking
 
-MangoLab automatically detects incidents based on status changes:
+MangoRack automatically detects incidents based on status changes:
 
 - **Incident starts** when a service transitions from `UP` to `DOWN` (or `DEGRADED`)
 - **Incident ends** when the service transitions back to `UP`
@@ -106,7 +106,7 @@ Each incident records:
 
 ## Response Time Tracking
 
-Every successful uptime check records the response time in milliseconds. MangoLab uses this data to:
+Every successful uptime check records the response time in milliseconds. MangoRack uses this data to:
 
 - **Graph response time trends** over time
 - **Detect degradation** when response times increase significantly
@@ -120,7 +120,7 @@ Response time includes:
 
 ## SSL Certificate Monitoring
 
-For HTTPS services, MangoLab automatically monitors SSL certificate status:
+For HTTPS services, MangoRack automatically monitors SSL certificate status:
 
 - **Certificate expiry**: Checks the certificate expiration date
 - **Days until expiry**: Displayed on the service detail page
@@ -157,7 +157,7 @@ After the retention period, individual check records are automatically deleted. 
 
 3. **Stagger intervals**: If you have many services, avoid setting them all to the same interval. Stagger by a few seconds to distribute load.
 
-4. **Monitor from the right perspective**: MangoLab checks from the server it runs on. If your services are on the same network, checks will be fast. For external services, consider network latency in your timeout configuration.
+4. **Monitor from the right perspective**: MangoRack checks from the server it runs on. If your services are on the same network, checks will be fast. For external services, consider network latency in your timeout configuration.
 
 5. **Review uptime regularly**: Check the uptime page weekly to identify patterns (e.g., services that degrade during peak hours).
 

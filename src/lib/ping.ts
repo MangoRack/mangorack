@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import * as net from "net";
 
 export interface CheckResult {
@@ -25,7 +25,7 @@ export async function checkHTTP(
       method,
       signal: controller.signal,
       headers: {
-        "User-Agent": "MangoLab/1.0 UptimeChecker",
+        "User-Agent": "MangoRack/1.0 UptimeChecker",
         ...(headers || {}),
       },
       redirect: "follow",
@@ -102,18 +102,29 @@ export async function checkTCP(
   });
 }
 
+// Strict hostname/IP validation to prevent command injection
+const VALID_HOST = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
+
 export async function checkPing(
   host: string,
   timeout: number = 10
 ): Promise<CheckResult> {
+  if (!VALID_HOST.test(host) || host.length > 253) {
+    return {
+      status: "DOWN",
+      responseTime: 0,
+      error: "Invalid hostname",
+    };
+  }
+
   return new Promise((resolve) => {
     const start = Date.now();
     const isWindows = process.platform === "win32";
-    const cmd = isWindows
-      ? `ping -n 1 -w ${timeout * 1000} ${host}`
-      : `ping -c 1 -W ${timeout} ${host}`;
+    const args = isWindows
+      ? ["-n", "1", "-w", String(timeout * 1000), host]
+      : ["-c", "1", "-W", String(timeout), host];
 
-    exec(cmd, { timeout: (timeout + 5) * 1000 }, (error, stdout) => {
+    execFile("ping", args, { timeout: (timeout + 5) * 1000 }, (error, stdout) => {
       const responseTime = Date.now() - start;
 
       if (error) {

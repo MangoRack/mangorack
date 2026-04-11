@@ -3,6 +3,7 @@ import redis from "@/lib/redis";
 import prisma from "@/lib/prisma";
 import { checkHTTP, checkTCP, checkPing } from "@/lib/ping";
 import { processServiceCheck } from "@/lib/alerts";
+import { logger } from "@/lib/logger";
 
 function extractHost(url: string | null): string | null {
   if (!url) return null;
@@ -169,11 +170,11 @@ export function createPingWorker() {
   );
 
   worker.on("failed", (job, err) => {
-    console.error(`Ping job ${job?.id} failed:`, err.message);
+    logger.error(`Ping job ${job?.id} failed:`, err.message);
   });
 
   worker.on("completed", (job) => {
-    console.log(`Ping job ${job.id} completed for service ${job.data.serviceId}`);
+    logger.info(`Ping job ${job.id} completed for service ${job.data.serviceId}`);
   });
 
   return worker;
@@ -213,10 +214,10 @@ export async function scheduleAllPingChecks() {
         type: service.type,
       },
       {
-        delay: Math.random() * 10000, // Stagger initial checks
+        delay: (services.indexOf(service) * 1000) % 10000, // Stagger initial checks deterministically
       }
     );
   }
 
-  console.log(`Scheduled ping checks for ${services.length} services`);
+  logger.info(`Scheduled ping checks for ${services.length} services`);
 }

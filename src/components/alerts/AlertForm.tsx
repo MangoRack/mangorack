@@ -4,8 +4,9 @@ import { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { X, Lock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
+import Dialog from "@/components/ui/Dialog"
 import type { Alert, AlertType, AlertSeverity } from "@/types/alert"
 import type { ApiResponse } from "@/types/api"
 
@@ -118,21 +119,12 @@ export function AlertForm({
   const labelClass = "text-sm font-medium text-foreground"
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-lg border border-border bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold">
-            {alert ? "Edit Alert" : "Create Alert"}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
+    <Dialog
+      open={true}
+      onClose={onCancel}
+      title={alert ? "Edit Alert" : "Create Alert"}
+      className="w-full max-w-lg rounded-lg border border-border bg-card shadow-xl px-6 py-4"
+    >
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -355,7 +347,7 @@ export function AlertForm({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
           <button
             type="button"
             onClick={onCancel}
@@ -375,7 +367,6 @@ export function AlertForm({
                 : "Create Alert"}
           </button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   )
 }

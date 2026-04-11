@@ -35,17 +35,16 @@ export function ServiceStatusWidget({ id, dragHandleProps }: ServiceStatusWidget
   const router = useRouter()
   const [tab, setTab] = useState<(typeof TABS)[number]>("All")
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<{ data?: Service[] }>({
     queryKey: ["services-status"],
     queryFn: () => fetch("/api/services").then((r) => r.json()),
     staleTime: 30000,
   })
 
-  const raw = data as any
-  const services: any[] = Array.isArray(raw?.data) ? raw.data : []
+  const services: Service[] = Array.isArray(data?.data) ? data.data : []
 
-  const filtered = services.filter((s: any) => {
-    const status = (s.currentStatus || s.status || "").toUpperCase()
+  const filtered = services.filter((s) => {
+    const status = (s.status || "").toUpperCase()
     if (tab === "All") return true
     if (tab === "Up") return status === "UP"
     if (tab === "Down") return status === "DOWN"
@@ -82,13 +81,15 @@ export function ServiceStatusWidget({ id, dragHandleProps }: ServiceStatusWidget
 
         {/* Service grid */}
         {filtered.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No services found
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Server className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No services found</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Add a service to start monitoring</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[260px] overflow-y-auto">
             {filtered.map((service) => {
-              const dot = STATUS_DOT[service.currentStatus || service.status] ?? "bg-slate-400"
+              const dot = STATUS_DOT[service.status] ?? "bg-slate-400"
               const lastCheck = service.lastCheckedAt ?? service.updatedAt
               const timeAgo = lastCheck
                 ? formatDistanceToNow(new Date(lastCheck), { addSuffix: false }) + " ago"

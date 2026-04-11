@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { Pencil, Trash2, ArrowUpDown } from "lucide-react"
 import ServiceStatusBadge from "./ServiceStatusBadge"
+import Dialog from "@/components/ui/Dialog"
 import type { ServiceWithNode } from "@/types/service"
 import { useDeleteService } from "@/hooks/useServices"
 import { toast } from "sonner"
@@ -102,12 +103,7 @@ export default function ServiceTable({ services }: ServiceTableProps) {
                 URL
               </th>
               <SortHeader field="type">Type</SortHeader>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Response
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Uptime 24h
-              </th>
+              <SortHeader field="currentStatus">Status</SortHeader>
               <SortHeader field="lastCheckedAt">Last Check</SortHeader>
               <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Actions
@@ -157,13 +153,11 @@ export default function ServiceTable({ services }: ServiceTableProps) {
                     {service.type}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  --ms
-                </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center rounded-full bg-green-500/10 text-green-500 px-2 py-0.5 text-xs font-medium">
-                    99.9%
-                  </span>
+                  <ServiceStatusBadge
+                    status={service.currentStatus}
+                    size="sm"
+                  />
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">
                   {service.lastCheckedAt
@@ -202,34 +196,32 @@ export default function ServiceTable({ services }: ServiceTableProps) {
       </div>
 
       {/* Delete confirmation dialog */}
-      {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-card-foreground mb-2">
-              Delete Service
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Are you sure you want to delete this service? This action cannot be
-              undone. All monitoring data will be permanently removed.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDeleteId)}
-                disabled={deleteService.isPending}
-                className="inline-flex items-center justify-center rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
-              >
-                {deleteService.isPending ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        title="Delete Service"
+        className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-sm w-full mx-4"
+      >
+        <p className="text-sm text-muted-foreground mb-6 mt-2">
+          Are you sure you want to delete this service? This action cannot be
+          undone. All monitoring data will be permanently removed.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setConfirmDeleteId(null)}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+            disabled={deleteService.isPending}
+            className="inline-flex items-center justify-center rounded-md bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
+          >
+            {deleteService.isPending ? "Deleting..." : "Delete"}
+          </button>
         </div>
-      )}
+      </Dialog>
     </>
   )
 }

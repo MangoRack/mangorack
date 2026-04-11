@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export class ApiError extends Error {
   constructor(
@@ -43,7 +44,7 @@ export function errorResponse(err: unknown) {
     };
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error:", err);
   return {
     status: 500,
     body: {

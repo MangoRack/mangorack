@@ -9,12 +9,12 @@ import {
   List,
   Lock,
   Server,
-  X,
 } from "lucide-react"
 import { useServices, type ServiceFilters } from "@/hooks/useServices"
 import ServiceCard from "@/components/services/ServiceCard"
 import ServiceTable from "@/components/services/ServiceTable"
-import type { ServiceStatus } from "@/types/service"
+import Dialog from "@/components/ui/Dialog"
+import type { ServiceWithNode } from "@/types/service"
 
 const FREE_LIMIT = 5
 
@@ -30,14 +30,14 @@ export default function ServicesPage() {
   }
 
   const { data, isLoading, error } = useServices(filters)
-  const services: any[] = Array.isArray((data as any)?.data) ? (data as any).data : []
-  const total = (data as any)?.meta?.total ?? services.length
+  const services: ServiceWithNode[] = Array.isArray(data?.data) ? data.data : []
+  const total = data?.meta?.total ?? services.length
   const atFreeLimit = total >= FREE_LIMIT
 
-  const upCount = services.filter((s: any) => s.currentStatus === "UP").length
-  const downCount = services.filter((s: any) => s.currentStatus === "DOWN").length
+  const upCount = services.filter((s) => s.currentStatus === "UP").length
+  const downCount = services.filter((s) => s.currentStatus === "DOWN").length
   const degradedCount = services.filter(
-    (s: any) => s.currentStatus === "DEGRADED"
+    (s) => s.currentStatus === "DEGRADED"
   ).length
 
   return (
@@ -92,7 +92,9 @@ export default function ServicesPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <label htmlFor="search-services-input" className="sr-only">Search services</label>
           <input
+            id="search-services-input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search services..."
@@ -165,7 +167,7 @@ export default function ServicesPage() {
       ) : services.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-12 text-center">
           <Server className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-card-foreground mb-2">
+          <h3 className="text-sm font-semibold text-card-foreground mb-2">
             No services yet
           </h3>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
@@ -190,51 +192,41 @@ export default function ServicesPage() {
       )}
 
       {/* Upgrade Modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-card-foreground">
-                Upgrade to Pro
-              </h3>
-              <button
-                onClick={() => setShowUpgradeModal(false)}
-                className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              You&apos;ve reached the free tier limit of {FREE_LIMIT} services.
-              Upgrade to Pro for unlimited services, faster check intervals, and
-              more.
-            </p>
-            <div className="flex items-center gap-2 mb-6">
-              <Lock className="h-4 w-4 text-violet-400" />
-              <span className="bg-violet-500/10 text-violet-400 text-xs rounded-full px-2 py-0.5">
-                PRO
-              </span>
-              <span className="text-sm text-muted-foreground">
-                Unlimited services, 10s intervals, priority alerts
-              </span>
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowUpgradeModal(false)}
-                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
-              >
-                Maybe Later
-              </button>
-              <Link
-                href="/settings?tab=billing"
-                className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Upgrade Now
-              </Link>
-            </div>
-          </div>
+      <Dialog
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade to Pro"
+        className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-md w-full mx-4"
+      >
+        <p className="text-sm text-muted-foreground mb-4 mt-2">
+          You&apos;ve reached the free tier limit of {FREE_LIMIT} services.
+          Upgrade to Pro for unlimited services, faster check intervals, and
+          more.
+        </p>
+        <div className="flex items-center gap-2 mb-6">
+          <Lock className="h-4 w-4 text-violet-400" />
+          <span className="bg-violet-500/10 text-violet-400 text-xs rounded-full px-2 py-0.5">
+            PRO
+          </span>
+          <span className="text-sm text-muted-foreground">
+            Unlimited services, 10s intervals, priority alerts
+          </span>
         </div>
-      )}
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setShowUpgradeModal(false)}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+          >
+            Maybe Later
+          </button>
+          <Link
+            href="/settings/license"
+            className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Upgrade Now
+          </Link>
+        </div>
+      </Dialog>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { Settings2, Plus, RotateCcw, X } from "lucide-react"
 import { toast } from "sonner"
 import { useDashboardLayout } from "@/hooks/useDashboardLayout"
 import { useDashboardStore } from "@/stores/dashboardStore"
+import { useLicense } from "@/hooks/useLicense"
 import { DashboardGrid } from "@/components/dashboard/DashboardGrid"
 import { WIDGET_DEFINITIONS } from "@/types/dashboard"
 
@@ -20,6 +21,7 @@ const DEFAULT_LAYOUT = [
 export default function DashboardPage() {
   const { isEditMode, setEditMode, addWidget, widgets, saveLayout } =
     useDashboardLayout()
+  useLicense() // refresh license status on mount
   const [addOpen, setAddOpen] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
 

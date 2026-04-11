@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import {
   BarChart as BarChartIcon,
   ArrowUpRight,
@@ -63,7 +63,7 @@ function ChartCard({
   isPro?: boolean
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 relative">
+    <div className="rounded-lg border border-border bg-card p-5 relative">
       <h3 className="text-sm font-semibold mb-4">{title}</h3>
       {isPro && <ProOverlay />}
       <div className={isPro ? "blur-sm opacity-50 pointer-events-none" : ""}>
@@ -89,7 +89,7 @@ function SummaryCard({
   iconColor?: string
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between mb-2">
         <Icon className={`h-4 w-4 ${iconColor || "text-muted-foreground"}`} />
         {trend !== undefined && (
@@ -150,8 +150,8 @@ function HeatmapGrid({
         ))}
         {/* Rows */}
         {grid.map((row, hour) => (
-          <>
-            <div key={`label-${hour}`} className="text-[10px] text-muted-foreground text-right pr-2 leading-[18px]">
+          <Fragment key={`row-${hour}`}>
+            <div className="text-[10px] text-muted-foreground text-right pr-2 leading-[18px]">
               {String(hour).padStart(2, "0")}:00
             </div>
             {row.map((val, day) => (
@@ -162,7 +162,7 @@ function HeatmapGrid({
                 title={`${dayLabels[day]} ${String(hour).padStart(2, "0")}:00 - ${val}`}
               />
             ))}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>
@@ -197,13 +197,13 @@ export default function AnalyticsPage() {
   const d = analytics || emptyAnalytics
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BarChartIcon className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+            <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
             <p className="text-sm text-muted-foreground">
               Performance metrics and insights
             </p>

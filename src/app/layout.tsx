@@ -6,7 +6,7 @@ import { Providers } from "@/components/layout/Providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MangoLab",
+  title: "MangoRack",
   description: "Your homelab, fully under control.",
 }
 

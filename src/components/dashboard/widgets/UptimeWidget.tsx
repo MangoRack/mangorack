@@ -6,6 +6,26 @@ import { ArrowUpCircle } from "lucide-react"
 import { LineChart, Line, ResponsiveContainer } from "recharts"
 import { WidgetWrapper } from "../WidgetWrapper"
 
+interface UptimeSummaryEntry {
+  serviceId: string
+  serviceName: string
+  currentStatus: string
+  uptimePercent: number
+  avgResponseTime: number
+  checksTotal: number
+  checksUp: number
+}
+
+interface UptimeApiResponse {
+  data?: {
+    summaries: UptimeSummaryEntry[]
+    overall: {
+      status: string
+      uptimePercent: number
+    }
+  }
+}
+
 interface UptimeWidgetProps {
   id: string
   dragHandleProps?: Record<string, unknown>
@@ -14,31 +34,31 @@ interface UptimeWidgetProps {
 export function UptimeWidget({ id, dragHandleProps }: UptimeWidgetProps) {
   const router = useRouter()
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<UptimeApiResponse>({
     queryKey: ["uptime-summary"],
     queryFn: () => fetch("/api/uptime").then((r) => r.json()),
     staleTime: 30000,
   })
 
-  const inner = (data as any)?.data ?? data
-  const overallData = inner?.overall ?? {}
-  const overall = overallData?.uptimePercent ?? inner?.percentage ?? 99.95
-  const history: { value: number }[] = inner?.history ??
-    Array.from({ length: 24 }, (_, i) => ({
-      value: 99 + Math.random(),
-    }))
+  const inner = data?.data
+  const overall = inner?.overall?.uptimePercent ?? null
+  const history: { value: number }[] = inner?.summaries?.map((s) => ({
+    value: s.uptimePercent,
+  })) ?? []
 
-  const summaries: any[] = inner?.summaries ?? inner?.services ?? []
-  const upCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "UP").length
-  const downCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "DOWN").length
-  const degradedCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "DEGRADED").length
+  const summaries = inner?.summaries ?? []
+  const upCount = summaries.filter((s) => s.currentStatus.toUpperCase() === "UP").length
+  const downCount = summaries.filter((s) => s.currentStatus.toUpperCase() === "DOWN").length
+  const degradedCount = summaries.filter((s) => s.currentStatus.toUpperCase() === "DEGRADED").length
 
   const uptimeColor =
-    overall >= 99.9
-      ? "text-green-500"
-      : overall >= 99
-        ? "text-yellow-500"
-        : "text-red-500"
+    overall === null
+      ? "text-muted-foreground"
+      : overall >= 99.9
+        ? "text-green-500"
+        : overall >= 99
+          ? "text-yellow-500"
+          : "text-red-500"
 
   return (
     <WidgetWrapper
@@ -58,7 +78,7 @@ export function UptimeWidget({ id, dragHandleProps }: UptimeWidgetProps) {
           <div>
             <p className="text-xs text-muted-foreground mb-1">Overall Uptime</p>
             <p className={`text-4xl font-bold tabular-nums ${uptimeColor}`}>
-              {Number(overall).toFixed(2)}%
+              {overall !== null ? Number(overall).toFixed(2) : "--"}%
             </p>
           </div>
           <div className="flex-1 h-12">

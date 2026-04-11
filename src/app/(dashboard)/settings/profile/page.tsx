@@ -116,7 +116,7 @@ export default function ProfileSettingsPage() {
         onSubmit={profileForm.handleSubmit(onProfileSubmit)}
         className="space-y-4 rounded-lg border border-border p-6 bg-card"
       >
-        <h3 className="text-lg font-semibold text-foreground">
+        <h3 className="text-sm font-semibold text-foreground">
           Account Details
         </h3>
 
@@ -178,7 +178,7 @@ export default function ProfileSettingsPage() {
         onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
         className="space-y-4 rounded-lg border border-border p-6 bg-card"
       >
-        <h3 className="text-lg font-semibold text-foreground">
+        <h3 className="text-sm font-semibold text-foreground">
           Change Password
         </h3>
 
