@@ -30,14 +30,14 @@ export default function ServicesPage() {
   }
 
   const { data, isLoading, error } = useServices(filters)
-  const services = data?.data ?? []
-  const total = data?.meta?.total ?? services.length
+  const services: any[] = Array.isArray((data as any)?.data) ? (data as any).data : []
+  const total = (data as any)?.meta?.total ?? services.length
   const atFreeLimit = total >= FREE_LIMIT
 
-  const upCount = services.filter((s) => s.currentStatus === "UP").length
-  const downCount = services.filter((s) => s.currentStatus === "DOWN").length
+  const upCount = services.filter((s: any) => s.currentStatus === "UP").length
+  const downCount = services.filter((s: any) => s.currentStatus === "DOWN").length
   const degradedCount = services.filter(
-    (s) => s.currentStatus === "DEGRADED"
+    (s: any) => s.currentStatus === "DEGRADED"
   ).length
 
   return (

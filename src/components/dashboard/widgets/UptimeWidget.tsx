@@ -20,22 +20,18 @@ export function UptimeWidget({ id, dragHandleProps }: UptimeWidgetProps) {
     staleTime: 30000,
   })
 
-  const overall = data?.overall ?? data?.percentage ?? 99.95
-  const history: { value: number }[] = data?.history ??
+  const inner = (data as any)?.data ?? data
+  const overallData = inner?.overall ?? {}
+  const overall = overallData?.uptimePercent ?? inner?.percentage ?? 99.95
+  const history: { value: number }[] = inner?.history ??
     Array.from({ length: 24 }, (_, i) => ({
       value: 99 + Math.random(),
     }))
 
-  const services = data?.services ?? []
-  const upCount = Array.isArray(services)
-    ? services.filter((s: { status?: string }) => s.status === "UP" || s.status === "up").length
-    : data?.up ?? 0
-  const downCount = Array.isArray(services)
-    ? services.filter((s: { status?: string }) => s.status === "DOWN" || s.status === "down").length
-    : data?.down ?? 0
-  const degradedCount = Array.isArray(services)
-    ? services.filter((s: { status?: string }) => s.status === "DEGRADED" || s.status === "degraded").length
-    : data?.degraded ?? 0
+  const summaries: any[] = inner?.summaries ?? inner?.services ?? []
+  const upCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "UP").length
+  const downCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "DOWN").length
+  const degradedCount = summaries.filter((s: any) => (s.currentStatus || s.status || "").toUpperCase() === "DEGRADED").length
 
   const uptimeColor =
     overall >= 99.9

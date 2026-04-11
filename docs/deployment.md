@@ -20,7 +20,6 @@ services:
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - LICENSE_SECRET=${LICENSE_SECRET}
       - NODE_ENV=production
     depends_on:
       db:

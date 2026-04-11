@@ -64,7 +64,7 @@ export function LogStreamWidget({ id, dragHandleProps }: LogStreamWidgetProps) {
     refetchInterval: 5000,
   })
 
-  const logs: LogEntry[] = Array.isArray(data) ? data : data?.logs ?? []
+  const logs: LogEntry[] = Array.isArray((data as any)?.data) ? (data as any).data : []
 
   const filtered =
     levelFilter === "ALL"

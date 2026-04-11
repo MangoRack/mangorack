@@ -2,9 +2,9 @@ import crypto from "crypto"
 import { prisma } from "./prisma"
 import { redis } from "./redis"
 
-const LICENSE_SECRET = process.env.LICENSE_SECRET || "default-secret"
-const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ" // no 0,O,1,I,L
-const CACHE_TTL = 3600 // 1 hour
+const LICENSE_SECRET = process.env.LICENSE_SECRET!
+const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+const CACHE_TTL = 3600
 const CACHE_KEY_PREFIX = "license:"
 const PLAN_CACHE_KEY = "license:current_plan"
 
@@ -13,27 +13,6 @@ export interface LicenseValidationResult {
   plan: "FREE" | "PRO" | "LIFETIME"
   expiresAt?: Date
   error?: string
-}
-
-function base32Encode(buffer: Buffer): string {
-  let result = ""
-  let bits = 0
-  let value = 0
-
-  for (let i = 0; i < buffer.length; i++) {
-    value = (value << 8) | buffer[i]
-    bits += 8
-    while (bits >= 5) {
-      bits -= 5
-      result += ALPHABET[(value >> bits) & 0x1f]
-    }
-  }
-
-  if (bits > 0) {
-    result += ALPHABET[(value << (5 - bits)) & 0x1f]
-  }
-
-  return result
 }
 
 function base32Decode(encoded: string): Buffer {
@@ -55,12 +34,6 @@ function base32Decode(encoded: string): Buffer {
   return Buffer.from(bytes)
 }
 
-function formatKey(encoded: string): string {
-  // Pad or trim to 20 chars, split into 4 groups of 5
-  const chars = encoded.substring(0, 20).padEnd(20, ALPHABET[0])
-  return `MANGO-${chars.slice(0, 5)}-${chars.slice(5, 10)}-${chars.slice(10, 15)}-${chars.slice(15, 20)}`
-}
-
 function parseKeyString(key: string): string | null {
   const match = key
     .toUpperCase()
@@ -70,49 +43,13 @@ function parseKeyString(key: string): string | null {
   return match[1] + match[2] + match[3] + match[4]
 }
 
-export function generateLicenseKey(
-  plan: "PRO" | "LIFETIME",
-  expiresAt?: Date
-): string {
-  // 10 random bytes for uniqueness
-  const randomBytes = crypto.randomBytes(10)
-
-  // Plan byte: P = PRO, L = LIFETIME
-  const planByte = plan === "PRO" ? 0x50 : 0x4c
-
-  // Expiry as 4-byte unix timestamp (0 if no expiry)
-  const expiryTimestamp = expiresAt
-    ? Math.floor(expiresAt.getTime() / 1000)
-    : 0
-  const expiryBytes = Buffer.alloc(4)
-  expiryBytes.writeUInt32BE(expiryTimestamp, 0)
-
-  // Construct payload: random(10) + plan(1) + expiry(4) = 15 bytes
-  const payload = Buffer.concat([
-    randomBytes,
-    Buffer.from([planByte]),
-    expiryBytes,
-  ])
-
-  // Sign payload
-  const hmac = crypto.createHmac("sha256", LICENSE_SECRET)
-  hmac.update(payload)
-  const signature = hmac.digest()
-
-  // Take first 4 bytes of signature
-  const sigBytes = signature.subarray(0, 4)
-
-  // Final data: payload(15) + sig(4) = 19 bytes
-  const finalData = Buffer.concat([payload, sigBytes])
-
-  // Encode and format
-  const encoded = base32Encode(finalData)
-  return formatKey(encoded)
-}
-
 export async function validateLicenseKey(
   key: string
 ): Promise<LicenseValidationResult> {
+  if (!LICENSE_SECRET) {
+    return { valid: false, plan: "FREE", error: "License validation unavailable" }
+  }
+
   // Check Redis cache
   try {
     const cached = await redis.get(`${CACHE_KEY_PREFIX}${key}`)

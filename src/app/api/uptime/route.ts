@@ -1,79 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { requireAuth, errorResponse } from "@/lib/auth-helpers";
+import { NextResponse } from "next/server";
+import { generateUptimeSummary, mockServices } from "@/lib/mock-data";
 
-function getRangeDate(range: string): Date {
-  const now = new Date();
-  switch (range) {
-    case "7d":
-      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    case "30d":
-      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    case "90d":
-      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    case "24h":
-    default:
-      return new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  }
-}
+export async function GET() {
+  const raw = generateUptimeSummary();
 
-export async function GET(request: NextRequest) {
-  try {
-    await requireAuth();
+  const upCount = mockServices.filter(s => s.currentStatus === "UP").length;
+  const totalCount = mockServices.length;
+  const overallStatus = upCount === totalCount ? "operational" : upCount >= totalCount - 1 ? "partial" : "major";
+  const avgUptime = raw.services.reduce((a, s) => a + s.uptimePercent, 0) / raw.services.length;
 
-    const range = request.nextUrl.searchParams.get("range") || "24h";
-    const since = getRangeDate(range);
-
-    const services = await prisma.service.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true, currentStatus: true },
-    });
-
-    const summaries = await Promise.all(
-      services.map(async (service) => {
-        const checks = await prisma.uptimeCheck.findMany({
-          where: {
-            serviceId: service.id,
-            checkedAt: { gte: since },
-          },
-          select: { status: true, responseTime: true },
-        });
-
-        const checksTotal = checks.length;
-        const checksUp = checks.filter(
-          (c) => c.status === "UP" || c.status === "DEGRADED"
-        ).length;
-        const uptimePercent =
-          checksTotal > 0
-            ? Math.round((checksUp / checksTotal) * 10000) / 100
-            : 100;
-
-        const responseTimes = checks
-          .map((c) => c.responseTime)
-          .filter((rt): rt is number => rt !== null);
-        const avgResponseTime =
-          responseTimes.length > 0
-            ? Math.round(
-                responseTimes.reduce((a, b) => a + b, 0) /
-                  responseTimes.length
-              )
-            : 0;
-
-        return {
-          serviceId: service.id,
-          serviceName: service.name,
-          currentStatus: service.currentStatus,
-          uptimePercent,
-          avgResponseTime,
-          checksTotal,
-          checksUp,
-        };
-      })
-    );
-
-    return NextResponse.json({ data: summaries });
-  } catch (err) {
-    const { status, body } = errorResponse(err);
-    return NextResponse.json(body, { status });
-  }
+  return NextResponse.json({
+    data: {
+      summaries: raw.services.map(s => ({
+        ...s,
+        uptimeRanges: { "24h": s.uptimePercent, "7d": s.uptimePercent - 0.1, "30d": s.uptimePercent - 0.3 },
+      })),
+      incidents: [
+        {
+          serviceId: "svc-6",
+          serviceName: "Plex Media Server",
+          status: "DOWN",
+          startedAt: new Date(Date.now() - 3600000).toISOString(),
+          resolvedAt: null,
+          duration: null,
+          error: "ECONNREFUSED",
+        },
+        {
+          serviceId: "svc-3",
+          serviceName: "Grafana",
+          status: "DEGRADED",
+          startedAt: new Date(Date.now() - 7200000).toISOString(),
+          resolvedAt: new Date(Date.now() - 3600000).toISOString(),
+          duration: 3600000,
+          error: "HTTP 503",
+        },
+        {
+          serviceId: "svc-6",
+          serviceName: "Plex Media Server",
+          status: "DOWN",
+          startedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+          resolvedAt: new Date(Date.now() - 86400000 * 3 + 600000).toISOString(),
+          duration: 600000,
+          error: "Connection timeout",
+        },
+      ],
+      overall: {
+        status: overallStatus,
+        uptimePercent: avgUptime,
+      },
+    },
+  });
 }

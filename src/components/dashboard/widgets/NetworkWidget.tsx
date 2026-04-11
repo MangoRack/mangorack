@@ -49,12 +49,8 @@ export function NetworkWidget({ id, dragHandleProps }: NetworkWidgetProps) {
     enabled: !isPro,
   })
 
-  const services: Service[] = Array.isArray(data?.services)
-    ? data.services
-    : data?.services?.services ?? []
-  const nodes: Node[] = Array.isArray(data?.nodes)
-    ? data.nodes
-    : data?.nodes?.nodes ?? []
+  const services: Service[] = Array.isArray(data?.services?.data) ? data.services.data : []
+  const nodes: Node[] = Array.isArray(data?.nodes?.data) ? data.nodes.data : []
 
   // Group services by node
   const grouped = new Map<string, { node: Node; services: Service[] }>()

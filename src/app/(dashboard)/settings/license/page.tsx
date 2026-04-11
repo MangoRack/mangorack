@@ -147,7 +147,7 @@ export default function LicenseSettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">License</h1>
+        <h2 className="text-lg font-semibold text-foreground">License</h2>
         <p className="text-muted-foreground mt-1">
           Manage your MangoLab license and view feature limits
         </p>

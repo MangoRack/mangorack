@@ -70,10 +70,10 @@ export function LogViewer({
     enabled: !serviceId && showToolbar,
   })
 
-  const logs = data?.data || []
-  const total = data?.meta?.total || 0
+  const logs = Array.isArray((data as any)?.data) ? (data as any).data : ((data as any)?.data?.logs ?? [])
+  const total = (data as any)?.meta?.total ?? (data as any)?.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / limit))
-  const services = (servicesData?.data || []) as Array<{
+  const services = (Array.isArray((servicesData as any)?.data) ? (servicesData as any).data : []) as Array<{
     id: string
     name: string
   }>

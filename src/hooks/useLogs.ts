@@ -48,10 +48,15 @@ export function useLogs(options?: UseLogsOptions): LogsResult {
     refetchInterval: live ? 5000 : false,
   })
 
+  const raw = data?.data
+  const logs = Array.isArray(raw) ? raw : (raw?.logs ?? [])
+  const total = raw?.total ?? data?.meta?.total ?? 0
+  const page = raw?.page ?? data?.meta?.page ?? 1
+
   return {
-    logs: data?.data || [],
-    total: data?.meta?.total || 0,
-    page: data?.meta?.page || 1,
+    logs,
+    total,
+    page,
     isLoading,
     error: error as Error | null,
     refetch,
@@ -72,10 +77,15 @@ export function useServiceLogs(
     enabled: !!serviceId,
   })
 
+  const raw = data?.data
+  const logs = Array.isArray(raw) ? raw : (raw?.logs ?? [])
+  const total = raw?.total ?? data?.meta?.total ?? 0
+  const page = raw?.page ?? data?.meta?.page ?? 1
+
   return {
-    logs: data?.data || [],
-    total: data?.meta?.total || 0,
-    page: data?.meta?.page || 1,
+    logs,
+    total,
+    page,
     isLoading,
     error: error as Error | null,
     refetch,

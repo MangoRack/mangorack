@@ -27,21 +27,17 @@ cp .env.example .env
 
 ### Step 2: Generate Secrets
 
-Generate two random secrets and add them to your `.env` file:
+Generate a random secret and add it to your `.env` file:
 
 ```bash
 # Generate NEXTAUTH_SECRET
-openssl rand -base64 32
-
-# Generate LICENSE_SECRET
 openssl rand -base64 32
 ```
 
 Open `.env` in your editor and replace the placeholder values:
 
 ```env
-NEXTAUTH_SECRET=<paste first generated secret>
-LICENSE_SECRET=<paste second generated secret>
+NEXTAUTH_SECRET=<paste generated secret>
 POSTGRES_PASSWORD=<choose a strong database password>
 ```
 

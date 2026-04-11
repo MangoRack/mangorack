@@ -11,7 +11,6 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:seed": "tsx scripts/seed.ts",
-    "generate-license": "tsx scripts/generate-license.ts",
     "setup": "tsx scripts/setup.ts",
     "workers": "tsx src/workers/index.ts"
   },

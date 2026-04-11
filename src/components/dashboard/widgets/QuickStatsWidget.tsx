@@ -26,10 +26,17 @@ export function QuickStatsWidget({ id, dragHandleProps }: QuickStatsWidgetProps)
     staleTime: 30000,
   })
 
-  const serviceCount = Array.isArray(data?.services) ? data.services.length : 0
-  const uptimePercent = data?.uptime?.overall ?? data?.uptime?.percentage ?? null
-  const alertCount = Array.isArray(data?.alerts) ? data.alerts.filter((a: { resolved?: boolean }) => !a.resolved).length : 0
-  const avgResponse = data?.uptime?.avgResponseTime ?? null
+  const servicesList = Array.isArray(data?.services?.data) ? data.services.data : []
+  const serviceCount = servicesList.length
+  const uptimeSummaries = data?.uptime?.data?.summaries ?? []
+  const uptimePercent = Array.isArray(uptimeSummaries) && uptimeSummaries.length > 0
+    ? (uptimeSummaries.reduce((acc: number, s: any) => acc + (s.uptimePercent ?? 0), 0) / uptimeSummaries.length)
+    : null
+  const alertsList = Array.isArray(data?.alerts?.data) ? data.alerts.data : []
+  const alertCount = alertsList.filter((a: any) => !a.resolvedAt).length
+  const avgResponse = Array.isArray(uptimeSummaries) && uptimeSummaries.length > 0
+    ? Math.round(uptimeSummaries.reduce((acc: number, s: any) => acc + (s.avgResponseTime ?? 0), 0) / uptimeSummaries.length)
+    : null
 
   const stats = [
     {

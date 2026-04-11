@@ -238,9 +238,8 @@ Cache invalidation:
 
 ### License Security
 
-- License keys are signed with HMAC-SHA256 using `LICENSE_SECRET`
+- License keys are validated server-side using cryptographic signatures
 - The key payload contains the plan type and expiry date
-- 4 bytes of the HMAC signature are embedded in the key for verification
 - Timing-safe comparison is used to prevent timing attacks
 
 ### Network Security

@@ -11,7 +11,6 @@ services:
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - LICENSE_SECRET=${LICENSE_SECRET:-default-license-secret}
       - NODE_ENV=production
     depends_on:
       db:

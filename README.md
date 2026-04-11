@@ -1,10 +1,10 @@
-# MangoLab
+# MangoRack
 
 **Your homelab, fully under control.**
 
-MangoLab is a self-hosted homelab tracker that monitors services, collects logs and metrics, tracks uptime, and alerts you when things go wrong. Built with Next.js 14, PostgreSQL, and Redis -- designed to run entirely on your own hardware with zero external dependencies.
+MangoRack is a self-hosted homelab tracker that monitors services, collects logs and metrics, tracks uptime, and alerts you when things go wrong. Built with Next.js 14, PostgreSQL, and Redis -- designed to run entirely on your own hardware with zero external dependencies.
 
-![MangoLab Dashboard](docs/screenshots/dashboard.png)
+![MangoRack Dashboard](docs/screenshots/dashboard.png)
 
 ---
 
@@ -18,12 +18,8 @@ MangoLab is a self-hosted homelab tracker that monitors services, collects logs 
 - **Customizable Dashboard** -- Drag-and-drop widgets (12 types) in multiple sizes with saveable layouts
 - **Node Tracking** -- Map services to physical servers, VMs, containers, and cloud instances
 - **SSL Monitoring** -- Automatic certificate expiry tracking for HTTPS services
-- **License System** -- Free tier for small homelabs, PRO tier for power users with self-hostable license key generation
+- **License System** -- Free tier for small homelabs, PRO and Lifetime tiers for power users
 - **Privacy First** -- No telemetry, no phone-home, all data stays on your server
-
-![MangoLab Services](docs/screenshots/services.png)
-
-![MangoLab Logs](docs/screenshots/logs.png)
 
 ---
 
@@ -32,8 +28,8 @@ MangoLab is a self-hosted homelab tracker that monitors services, collects logs 
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/your-org/mangolab.git
-cd mangolab
+git clone https://github.com/MangoRack/mangorack.git
+cd mangorack
 cp .env.example .env
 ```
 
@@ -41,7 +37,6 @@ cp .env.example .env
 
 ```bash
 openssl rand -base64 32  # Use output for NEXTAUTH_SECRET
-openssl rand -base64 32  # Use output for LICENSE_SECRET
 # Edit .env with your values
 ```
 
@@ -71,64 +66,41 @@ curl http://localhost:3000/api/health
 | `REDIS_URL` | Yes | `redis://localhost:6379` | Redis connection string |
 | `NEXTAUTH_SECRET` | **Yes** | -- | Secret for session encryption (min 32 chars). Generate with `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Yes | `http://localhost:3000` | Public URL of the app (must match browser URL) |
-| `LICENSE_SECRET` | Yes | `default-license-secret` | Secret for license key generation/validation |
 | `PORT` | No | `3000` | Port the app listens on |
 | `NODE_ENV` | No | `production` | Node environment |
 
 ---
 
-## Free vs PRO
+## Free vs PRO vs Lifetime
 
-| Feature | Free | PRO |
-|---|---|---|
-| **Services** | 5 | 100 |
-| **Alerts** | 3 | 50 |
-| **Nodes** | 1 | 20 |
-| **Log retention** | 3 days | 90 days |
-| **Uptime retention** | 7 days | 365 days |
-| **Min ping interval** | 60s | 10s |
-| **Log ingestion rate** | 100/min | 10,000/min |
-| **Dashboard widgets** | 6 | 50 |
-| Multiple dashboards | -- | Yes |
-| Advanced analytics | -- | Yes |
-| Custom widgets | -- | Yes |
-| API access | -- | Yes |
-| Webhook alerts | -- | Yes |
-| Discord alerts | -- | Yes |
-| Slack alerts | -- | Yes |
-| Data export | -- | Yes |
-| Node tracking | -- | Yes |
-| Metric ingestion | -- | Yes |
-| Custom ping headers | -- | Yes |
-| TCP monitoring | -- | Yes |
-| DNS monitoring | -- | Yes |
+| Feature | Free | PRO ($15/mo) | Lifetime ($50) |
+|---|---|---|---|
+| **Services** | 5 | 100 | Unlimited |
+| **Alerts** | 3 | 50 | Unlimited |
+| **Nodes** | 1 | 20 | Unlimited |
+| **Log retention** | 3 days | 90 days | Unlimited |
+| **Uptime retention** | 7 days | 365 days | Unlimited |
+| **Min ping interval** | 60s | 10s | 10s |
+| **Log ingestion rate** | 100/min | 10,000/min | Unlimited |
+| **Dashboard widgets** | 6 | 50 | Unlimited |
+| Multiple dashboards | -- | Yes | Yes |
+| Advanced analytics | -- | Yes | Yes |
+| Custom widgets | -- | Yes | Yes |
+| API access | -- | Yes | Full |
+| Webhook alerts | -- | Yes | Yes |
+| Discord alerts | -- | Yes | Yes |
+| Slack alerts | -- | Yes | Yes |
+| Data export | -- | Yes | Yes |
+| Node tracking | -- | Yes | Yes |
+| Metric ingestion | -- | Yes | Yes |
 
----
-
-## Generate a License Key
-
-MangoLab runs on the FREE plan by default. To unlock PRO features, generate a license key:
-
-```bash
-# Generate a PRO key (no expiration)
-npx ts-node scripts/generate-license.ts --plan PRO
-
-# Generate a PRO key with expiration
-npx ts-node scripts/generate-license.ts --plan PRO --expires 2027-12-31
-
-# Generate a LIFETIME key
-npx ts-node scripts/generate-license.ts --plan LIFETIME
-```
-
-Enter the generated key at **Settings > License** in the app.
-
-> **Note:** The `LICENSE_SECRET` in `.env` must match between key generation and your running instance.
+Purchase a license key at [mangorack.dev](https://mangorack.dev), then enter it at **Settings > License** in the app.
 
 ---
 
 ## Log Ingestion
 
-Send logs to MangoLab via the REST API:
+Send logs to MangoRack via the REST API:
 
 ```bash
 curl -X POST http://localhost:3000/api/ingest/logs \
@@ -144,7 +116,7 @@ curl -X POST http://localhost:3000/api/ingest/logs \
 
 ## Metric Ingestion (PRO)
 
-Send metrics to MangoLab via the REST API:
+Send metrics to MangoRack via the REST API:
 
 ```bash
 curl -X POST http://localhost:3000/api/ingest/metrics \
@@ -218,7 +190,7 @@ Contributions are welcome! Please:
 5. Commit with a descriptive message
 6. Push to your fork and open a Pull Request
 
-For bug reports and feature requests, please use [GitHub Issues](https://github.com/your-org/mangolab/issues).
+For bug reports and feature requests, please use [GitHub Issues](https://github.com/MangoRack/mangorack/issues).
 
 ---
 
@@ -234,8 +206,7 @@ For bug reports and feature requests, please use [GitHub Issues](https://github.
 - Check if the database is ready: `docker compose logs db`
 
 **License key invalid:**
-- Ensure `LICENSE_SECRET` in `.env` matches the secret used when the key was generated
-- Regenerate a key with the current secret
+- Contact support at [mangorack.dev](https://mangorack.dev) if you believe your key should be valid
 
 **Redis connection errors:**
 - Verify `REDIS_URL` is correct

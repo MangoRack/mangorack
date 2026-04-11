@@ -41,12 +41,14 @@ export function ServiceStatusWidget({ id, dragHandleProps }: ServiceStatusWidget
     staleTime: 30000,
   })
 
-  const services: Service[] = Array.isArray(data) ? data : data?.services ?? []
+  const raw = data as any
+  const services: any[] = Array.isArray(raw?.data) ? raw.data : []
 
-  const filtered = services.filter((s) => {
+  const filtered = services.filter((s: any) => {
+    const status = (s.currentStatus || s.status || "").toUpperCase()
     if (tab === "All") return true
-    if (tab === "Up") return s.status === "UP" || s.status === "up"
-    if (tab === "Down") return s.status === "DOWN" || s.status === "down"
+    if (tab === "Up") return status === "UP"
+    if (tab === "Down") return status === "DOWN"
     return true
   })
 
@@ -86,7 +88,7 @@ export function ServiceStatusWidget({ id, dragHandleProps }: ServiceStatusWidget
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[260px] overflow-y-auto">
             {filtered.map((service) => {
-              const dot = STATUS_DOT[service.status] ?? "bg-slate-400"
+              const dot = STATUS_DOT[service.currentStatus || service.status] ?? "bg-slate-400"
               const lastCheck = service.lastCheckedAt ?? service.updatedAt
               const timeAgo = lastCheck
                 ? formatDistanceToNow(new Date(lastCheck), { addSuffix: false }) + " ago"

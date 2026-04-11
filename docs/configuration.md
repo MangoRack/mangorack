@@ -93,20 +93,6 @@ NEXTAUTH_URL=https://mangolab.example.com
 
 > **Important:** If `NEXTAUTH_URL` does not match the URL in the browser, authentication will fail with redirect errors.
 
-### License
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `LICENSE_SECRET` | Yes | `default-license-secret` | Secret used to generate and validate license keys. Must match between key generation and validation. |
-
-Generate a license secret:
-
-```bash
-openssl rand -base64 32
-```
-
-> **Important:** If you change `LICENSE_SECRET` after activating a license key, the key will become invalid. You will need to generate a new key with the new secret.
-
 ### Application
 
 | Variable | Required | Default | Description |
@@ -194,9 +180,6 @@ REDIS_URL=redis://redis:6379
 # ── Auth
 NEXTAUTH_SECRET=Gx9k3mF7pQw2tR5vY8zA1cE4hJ6nB0dL
 NEXTAUTH_URL=https://mangolab.example.com
-
-# ── License
-LICENSE_SECRET=Kp3nR7wX2bF5vJ8mQ1tY4zA6cE9hL0dG
 
 # ── App
 PORT=3000

@@ -55,7 +55,7 @@ export function AlertsWidget({ id, dragHandleProps }: AlertsWidgetProps) {
     staleTime: 30000,
   })
 
-  const alerts: Alert[] = (Array.isArray(data) ? data : data?.alerts ?? []).slice(0, 10)
+  const alerts: Alert[] = (Array.isArray((data as any)?.data) ? (data as any).data : []).slice(0, 10)
 
   return (
     <WidgetWrapper

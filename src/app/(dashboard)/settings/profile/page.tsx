@@ -105,7 +105,7 @@ export default function ProfileSettingsPage() {
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Profile</h2>
+        <h2 className="text-lg font-semibold text-foreground">Profile</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Manage your account details and password.
         </p>
