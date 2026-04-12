@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireAuth, errorResponse } from "@/lib/auth-helpers";
+
+const layoutItemSchema = z.object({
+  i: z.string(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+}).passthrough();
+
+const postBodySchema = z.object({
+  name: z.string().optional(),
+  layout: z.array(layoutItemSchema),
+});
 
 const defaultLayout = {
   widgets: [
@@ -44,6 +58,16 @@ export async function POST(request: NextRequest) {
     await requireAuth();
 
     const json = await request.json();
+    const parsed = postBodySchema.safeParse(json);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { name, layout: layoutData } = parsed.data;
 
     const existing = await prisma.dashboardLayout.findFirst({
       where: { isDefault: true },
@@ -52,13 +76,13 @@ export async function POST(request: NextRequest) {
     const layout = await prisma.dashboardLayout.upsert({
       where: { id: existing?.id ?? "" },
       update: {
-        name: json.name ?? "Default",
-        layout: json.layout ?? defaultLayout,
+        name: name ?? "Default",
+        layout: layoutData ?? defaultLayout,
         isDefault: true,
       },
       create: {
-        name: json.name ?? "Default",
-        layout: json.layout ?? defaultLayout,
+        name: name ?? "Default",
+        layout: layoutData ?? defaultLayout,
         isDefault: true,
       },
     });

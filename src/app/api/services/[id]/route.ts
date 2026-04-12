@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireAuth, errorResponse, ApiError } from "@/lib/auth-helpers";
 import { isSafeUrl } from "@/lib/url-safety";
+
+const updateServiceSchema = z.object({
+  name: z.string().min(1).max(255),
+  type: z.enum(["HTTP", "HTTPS", "TCP", "PING", "DNS"]),
+  description: z.string().max(1000).optional(),
+  url: z.string().max(2048).optional(),
+  category: z.string().max(100).optional(),
+  tags: z.array(z.string().max(100)).max(20).optional(),
+  nodeId: z.string().optional(),
+  port: z.number().int().min(1).max(65535).optional().nullable(),
+  icon: z.string().max(255).optional().nullable(),
+  color: z.string().max(50).optional().nullable(),
+  isActive: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
+  pingEnabled: z.boolean().optional(),
+  pingInterval: z.number().int().min(10).optional(),
+  pingTimeout: z.number().int().min(1).optional(),
+  expectedStatus: z.number().int().optional(),
+  pingMethod: z.string().optional(),
+  pingHeaders: z.record(z.string()).optional().nullable(),
+  pingBody: z.string().optional().nullable(),
+  currentStatus: z.enum(["UP", "DOWN", "DEGRADED", "UNKNOWN", "MAINTENANCE"]).optional(),
+}).partial();
 
 export async function GET(
   _request: NextRequest,
@@ -45,35 +69,24 @@ export async function PATCH(
     }
 
     const json = await request.json();
+    const parsed = updateServiceSchema.safeParse(json);
 
-    if (json.url !== undefined && json.url && !isSafeUrl(json.url)) {
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: parsed.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ") } },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
+    if (data.url && !isSafeUrl(data.url, { allowPrivateIPs: true })) {
       throw new ApiError(400, "VALIDATION_ERROR", "URL blocked by security policy");
     }
 
     const service = await prisma.service.update({
       where: { id: params.id },
-      data: {
-        ...(json.name !== undefined && { name: json.name }),
-        ...(json.description !== undefined && { description: json.description }),
-        ...(json.url !== undefined && { url: json.url }),
-        ...(json.type !== undefined && { type: json.type }),
-        ...(json.category !== undefined && { category: json.category }),
-        ...(json.tags !== undefined && { tags: json.tags }),
-        ...(json.nodeId !== undefined && { nodeId: json.nodeId }),
-        ...(json.port !== undefined && { port: json.port }),
-        ...(json.icon !== undefined && { icon: json.icon }),
-        ...(json.color !== undefined && { color: json.color }),
-        ...(json.isActive !== undefined && { isActive: json.isActive }),
-        ...(json.isPinned !== undefined && { isPinned: json.isPinned }),
-        ...(json.pingEnabled !== undefined && { pingEnabled: json.pingEnabled }),
-        ...(json.pingInterval !== undefined && { pingInterval: json.pingInterval }),
-        ...(json.pingTimeout !== undefined && { pingTimeout: json.pingTimeout }),
-        ...(json.expectedStatus !== undefined && { expectedStatus: json.expectedStatus }),
-        ...(json.pingMethod !== undefined && { pingMethod: json.pingMethod }),
-        ...(json.pingHeaders !== undefined && { pingHeaders: json.pingHeaders }),
-        ...(json.pingBody !== undefined && { pingBody: json.pingBody }),
-        ...(json.currentStatus !== undefined && { currentStatus: json.currentStatus }),
-      },
+      data,
       include: { node: true },
     });
 

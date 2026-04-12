@@ -64,10 +64,12 @@ curl http://localhost:3000/api/health
 | `DATABASE_URL` | Yes | `postgresql://mangorack:changeme@localhost:5432/mangorack` | PostgreSQL connection string |
 | `POSTGRES_PASSWORD` | Yes | `changeme` | PostgreSQL password (used in docker-compose) |
 | `REDIS_URL` | Yes | `redis://localhost:6379` | Redis connection string |
+| `REDIS_PASSWORD` | No | `changeme_redis` | Redis password (used in docker-compose to set `--requirepass` and build `REDIS_URL`) |
 | `NEXTAUTH_SECRET` | **Yes** | -- | Secret for session encryption (min 32 chars). Generate with `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Yes | `http://localhost:3000` | Public URL of the app (must match browser URL) |
 | `PORT` | No | `3000` | Port the app listens on |
 | `NODE_ENV` | No | `production` | Node environment |
+| `LICENSE_API_URL` | No | `https://api.mangorack.dev/v1/license` | License validation API endpoint |
 
 ---
 

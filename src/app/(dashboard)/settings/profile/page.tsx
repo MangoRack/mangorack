@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -32,6 +32,8 @@ type PasswordFormData = z.infer<typeof passwordSchema>
 export default function ProfileSettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -40,6 +42,27 @@ export default function ProfileSettingsPage() {
       email: "",
     },
   })
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/auth/profile")
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.error?.message || "Failed to load profile")
+        }
+        const { data } = await res.json()
+        profileForm.reset({ name: data.name ?? "", email: data.email ?? "" })
+      } catch (err) {
+        setLoadError(
+          err instanceof Error ? err.message : "Failed to load profile"
+        )
+      } finally {
+        setLoadingProfile(false)
+      }
+    }
+    fetchProfile()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -112,66 +135,84 @@ export default function ProfileSettingsPage() {
       </div>
 
       {/* Profile Form */}
-      <form
-        onSubmit={profileForm.handleSubmit(onProfileSubmit)}
-        className="space-y-4 rounded-lg border border-border p-6 bg-card"
-      >
-        <h3 className="text-sm font-semibold text-foreground">
+      <div className="rounded-lg border border-border p-6 bg-card">
+        <h3 className="text-sm font-semibold text-foreground mb-4">
           Account Details
         </h3>
 
-        <div className="space-y-2">
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-foreground"
+        {loadingProfile ? (
+          <div className="space-y-4 animate-pulse">
+            <div>
+              <div className="h-4 w-24 bg-muted rounded mb-2" />
+              <div className="h-10 w-full bg-muted rounded" />
+            </div>
+            <div>
+              <div className="h-4 w-16 bg-muted rounded mb-2" />
+              <div className="h-10 w-full bg-muted rounded" />
+            </div>
+            <div className="h-9 w-28 bg-muted rounded" />
+          </div>
+        ) : loadError ? (
+          <p className="text-sm text-destructive">{loadError}</p>
+        ) : (
+          <form
+            onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+            className="space-y-4"
           >
-            Display Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            {...profileForm.register("name")}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Your name"
-          />
-          {profileForm.formState.errors.name && (
-            <p className="text-xs text-destructive">
-              {profileForm.formState.errors.name.message}
-            </p>
-          )}
-        </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-foreground"
+              >
+                Display Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                {...profileForm.register("name")}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Your name"
+              />
+              {profileForm.formState.errors.name && (
+                <p className="text-xs text-destructive">
+                  {profileForm.formState.errors.name.message}
+                </p>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-foreground"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...profileForm.register("email")}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="you@example.com"
-          />
-          {profileForm.formState.errors.email && (
-            <p className="text-xs text-destructive">
-              {profileForm.formState.errors.email.message}
-            </p>
-          )}
-        </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-foreground"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                {...profileForm.register("email")}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="you@example.com"
+              />
+              {profileForm.formState.errors.email && (
+                <p className="text-xs text-destructive">
+                  {profileForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
 
-        <button
-          type="submit"
-          disabled={savingProfile}
-          className={cn(
-            "rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {savingProfile ? "Saving..." : "Save Profile"}
-        </button>
-      </form>
+            <button
+              type="submit"
+              disabled={savingProfile}
+              className={cn(
+                "rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              {savingProfile ? "Saving..." : "Save Profile"}
+            </button>
+          </form>
+        )}
+      </div>
 
       {/* Password Form */}
       <form

@@ -15,7 +15,7 @@ export function LicenseBanner() {
         const res = await fetch("/api/services")
         if (res.ok) {
           const data = await res.json()
-          setServiceCount(Array.isArray(data) ? data.length : data.total || 0)
+          setServiceCount(data?.meta?.total ?? (Array.isArray(data?.data) ? data.data.length : 0))
         }
       } catch {
         // Silently fail

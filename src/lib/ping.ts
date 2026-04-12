@@ -64,7 +64,7 @@ export async function checkHTTP(
   headers?: Record<string, string>,
   body?: string
 ): Promise<CheckResult> {
-  if (!isSafeUrl(url)) {
+  if (!isSafeUrl(url, { allowPrivateIPs: true })) {
     return {
       status: "DOWN" as const,
       responseTime: 0,
@@ -125,7 +125,7 @@ export async function checkTCP(
   port: number,
   timeout: number = 10
 ): Promise<CheckResult> {
-  if (!isSafeHost(host)) {
+  if (!isSafeHost(host, { allowPrivateIPs: true })) {
     return Promise.resolve({
       status: "DOWN" as const,
       responseTime: 0,

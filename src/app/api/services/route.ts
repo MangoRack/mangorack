@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const json = await request.json();
     const data = createServiceSchema.parse(json);
 
-    if (data.url && !isSafeUrl(data.url)) {
+    if (data.url && !isSafeUrl(data.url, { allowPrivateIPs: true })) {
       throw new ApiError(400, "VALIDATION_ERROR", "URL blocked by security policy");
     }
 

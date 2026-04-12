@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { auth } from "@/lib/auth";
+import packageJson from "../../../../package.json";
 
 export async function GET(request: NextRequest) {
   let dbStatus = "error";
@@ -21,8 +22,10 @@ export async function GET(request: NextRequest) {
     // redis unreachable
   }
 
-  const healthy = dbStatus === "ok";
-  const status = healthy ? "ok" : "degraded";
+  const dbUp = dbStatus === "ok";
+  const redisUp = redisStatus === "ok";
+  const status = !dbUp ? "error" : !redisUp ? "degraded" : "ok";
+  const httpStatus = dbUp ? 200 : 503;
 
   // Only expose detailed info to authenticated users
   let isAuthenticated = false;
@@ -40,15 +43,15 @@ export async function GET(request: NextRequest) {
           status,
           db: dbStatus,
           redis: redisStatus,
-          version: "1.0.0",
+          version: packageJson.version,
         },
       },
-      { status: healthy ? 200 : 503 }
+      { status: httpStatus }
     );
   }
 
   return NextResponse.json(
     { data: { status } },
-    { status: healthy ? 200 : 503 }
+    { status: httpStatus }
   );
 }

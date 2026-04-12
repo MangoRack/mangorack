@@ -48,11 +48,36 @@ export const PRO_LIMITS = {
   dnsMonitoring: true,
 } as const
 
+export const LIFETIME_LIMITS = {
+  maxServices: 999999,
+  maxAlerts: 999999,
+  maxNodes: 999999,
+  logRetentionDays: 999999,
+  uptimeRetentionDays: 999999,
+  pingIntervalMin: 10,
+  maxLogIngestionPerMin: 999999,
+  dashboardWidgets: 999999,
+  multiDashboard: true,
+  advancedAnalytics: true,
+  customWidgets: true,
+  apiAccess: true,
+  webhookAlerts: true,
+  discordAlerts: true,
+  slackAlerts: true,
+  exportData: true,
+  nodeTracking: true,
+  metricIngestion: true,
+  customPingHeaders: true,
+  tcpMonitoring: true,
+  dnsMonitoring: true,
+} as const
+
 export type LimitKey = keyof typeof FREE_LIMITS
-export type LimitsMap = { [K in LimitKey]: typeof FREE_LIMITS[K] | typeof PRO_LIMITS[K] }
+export type LimitsMap = { [K in LimitKey]: typeof FREE_LIMITS[K] | typeof PRO_LIMITS[K] | typeof LIFETIME_LIMITS[K] }
 
 export async function getLimits(): Promise<LimitsMap> {
   const plan = await getCurrentLicensePlan()
+  if (plan === "LIFETIME") return LIFETIME_LIMITS as LimitsMap
   return (plan === "FREE" ? FREE_LIMITS : PRO_LIMITS) as LimitsMap
 }
 
@@ -98,7 +123,7 @@ export async function getLicensePlan() {
 const RESOURCE_LIMITS: Record<string, Record<string, number>> = {
   FREE: { services: 5, alerts: 3, nodes: 1 },
   PRO: { services: 100, alerts: 50, nodes: 20 },
-  LIFETIME: { services: 100, alerts: 50, nodes: 20 },
+  LIFETIME: { services: 999999, alerts: 999999, nodes: 999999 },
 }
 
 export function checkLimits(plan: string, resource: string): number {
@@ -106,12 +131,13 @@ export function checkLimits(plan: string, resource: string): number {
 }
 
 export function getRetentionDays(plan: string): number {
-  if (plan === "PRO" || plan === "LIFETIME") return 90
+  if (plan === "LIFETIME") return 999999
+  if (plan === "PRO") return 90
   return 3
 }
 
 export async function getFeatureStatus() {
   const plan = await getCurrentLicensePlan()
-  const limits = plan === "FREE" ? FREE_LIMITS : PRO_LIMITS
+  const limits = plan === "LIFETIME" ? LIFETIME_LIMITS : plan === "FREE" ? FREE_LIMITS : PRO_LIMITS
   return { plan, isValid: plan !== "FREE", features: limits }
 }

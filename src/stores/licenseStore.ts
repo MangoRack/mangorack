@@ -51,8 +51,33 @@ const PRO_FEATURES: Record<string, boolean | number> = {
   dnsMonitoring: true,
 }
 
+const LIFETIME_FEATURES: Record<string, boolean | number> = {
+  maxServices: 999999,
+  maxAlerts: 999999,
+  maxNodes: 999999,
+  logRetentionDays: 999999,
+  uptimeRetentionDays: 999999,
+  pingIntervalMin: 10,
+  maxLogIngestionPerMin: 999999,
+  dashboardWidgets: 999999,
+  multiDashboard: true,
+  advancedAnalytics: true,
+  customWidgets: true,
+  apiAccess: true,
+  webhookAlerts: true,
+  discordAlerts: true,
+  slackAlerts: true,
+  exportData: true,
+  nodeTracking: true,
+  metricIngestion: true,
+  customPingHeaders: true,
+  tcpMonitoring: true,
+  dnsMonitoring: true,
+}
+
 function getFeaturesForPlan(plan: Plan): Record<string, boolean | number> {
-  return plan === "PRO" || plan === "LIFETIME" ? PRO_FEATURES : FREE_FEATURES
+  if (plan === "LIFETIME") return LIFETIME_FEATURES
+  return plan === "PRO" ? PRO_FEATURES : FREE_FEATURES
 }
 
 interface LicenseState {

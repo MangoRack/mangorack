@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Crown, Check, X, Zap, Shield } from "lucide-react"
+import { Crown, Check, X, Zap, Shield, Star } from "lucide-react"
 import { useLicense } from "@/hooks/useLicense"
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -61,6 +61,30 @@ const PRO_VALUES: Record<string, number | boolean> = {
   pingIntervalMin: 10,
   maxLogIngestionPerMin: 10000,
   dashboardWidgets: 50,
+  multiDashboard: true,
+  advancedAnalytics: true,
+  customWidgets: true,
+  apiAccess: true,
+  webhookAlerts: true,
+  discordAlerts: true,
+  slackAlerts: true,
+  exportData: true,
+  nodeTracking: true,
+  metricIngestion: true,
+  customPingHeaders: true,
+  tcpMonitoring: true,
+  dnsMonitoring: true,
+}
+
+const LIFETIME_VALUES: Record<string, number | boolean | "Unlimited"> = {
+  maxServices: "Unlimited",
+  maxAlerts: "Unlimited",
+  maxNodes: "Unlimited",
+  logRetentionDays: "Unlimited",
+  uptimeRetentionDays: "Unlimited",
+  pingIntervalMin: 10,
+  maxLogIngestionPerMin: "Unlimited",
+  dashboardWidgets: "Unlimited",
   multiDashboard: true,
   advancedAnalytics: true,
   customWidgets: true,
@@ -254,6 +278,12 @@ export default function LicenseSettingsPage() {
                     Pro
                   </div>
                 </th>
+                <th className="text-center text-sm font-medium px-6 py-3 w-32">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    Lifetime
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -292,6 +322,30 @@ export default function LicenseSettingsPage() {
                           {formatValue(proVal)}
                         </span>
                       )}
+                    </td>
+                    <td className="text-center px-6 py-3">
+                      {(() => {
+                        const lifetimeVal = LIFETIME_VALUES[key]
+                        if (lifetimeVal === "Unlimited") {
+                          return (
+                            <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                              Unlimited
+                            </span>
+                          )
+                        }
+                        if (typeof lifetimeVal === "boolean") {
+                          return lifetimeVal ? (
+                            <Check className="h-4 w-4 text-green-500 mx-auto" />
+                          ) : (
+                            <X className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+                          )
+                        }
+                        return (
+                          <span className="text-sm font-medium">
+                            {typeof lifetimeVal === "number" ? lifetimeVal.toLocaleString() : ""}
+                          </span>
+                        )
+                      })()}
                     </td>
                   </tr>
                 )
