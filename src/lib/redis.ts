@@ -8,7 +8,7 @@ const globalForRedis = globalThis as unknown as {
 function createRedisClient(): Redis {
   const url = process.env.REDIS_URL || "redis://localhost:6379";
   const client = new Redis(url, {
-    maxRetriesPerRequest: 3,
+    maxRetriesPerRequest: null,
     enableReadyCheck: false,
     lazyConnect: true,
     connectTimeout: 5000,
