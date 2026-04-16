@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
         pingTimeout: data.pingTimeout ?? 10,
         expectedStatus: data.expectedStatus ?? 200,
         pingMethod: data.pingMethod ?? "GET",
-        pingHeaders: data.pingHeaders,
-        pingBody: data.pingBody,
+        pingHeaders: data.pingHeaders ?? Prisma.JsonNull,
+        pingBody: data.pingBody ?? undefined,
       },
       include: { node: true },
     });

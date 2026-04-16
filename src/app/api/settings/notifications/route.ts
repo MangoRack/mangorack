@@ -83,7 +83,7 @@ export async function GET() {
       include: { settings: true },
     })
 
-    const settings = dbToNotificationSettings(user?.settings)
+    const settings = dbToNotificationSettings(user?.settings ?? null)
 
     return NextResponse.json({ data: settings })
   } catch (err) {
