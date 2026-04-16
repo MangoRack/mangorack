@@ -42,7 +42,7 @@ export function ResourceUsageWidget({ id, dragHandleProps }: ResourceUsageWidget
     enabled: !isLocked,
   })
 
-  const nodes: NodeResource[] = Array.isArray(data) ? data : data?.nodes ?? []
+  const nodes: NodeResource[] = Array.isArray(data) ? data : data?.data ?? data?.nodes ?? []
 
   return (
     <WidgetWrapper
