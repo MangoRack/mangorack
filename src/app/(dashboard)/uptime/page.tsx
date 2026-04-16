@@ -21,7 +21,7 @@ export default function UptimePage() {
   const summaries = overview?.summaries ?? []
   const incidents = overview?.incidents ?? []
   const overallStatus = overview?.overall?.status ?? "operational"
-  const overallUptime = overview?.overall?.uptimePercent ?? 100
+  const overallUptime = Number(overview?.overall?.uptimePercent ?? 100)
 
   const bannerConfig = {
     operational: {
@@ -187,7 +187,7 @@ export default function UptimePage() {
                               : "text-red-500"
                         }`}
                       >
-                        {s.uptimePercent.toFixed(2)}%
+                        {Number(s.uptimePercent).toFixed(2)}%
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-sm text-muted-foreground">
@@ -341,7 +341,7 @@ function UptimeBar({ summary }: UptimeBarProps) {
                 : "text-red-500"
           }`}
         >
-          {summary.uptimePercent.toFixed(1)}%
+          {Number(summary.uptimePercent).toFixed(1)}%
         </span>
       </div>
     </div>

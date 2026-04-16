@@ -4,18 +4,10 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { requireAuth, errorResponse } from "@/lib/auth-helpers";
 
-const layoutItemSchema = z.object({
-  i: z.string(),
-  x: z.number(),
-  y: z.number(),
-  w: z.number(),
-  h: z.number(),
-}).passthrough();
-
 const postBodySchema = z.object({
   name: z.string().optional(),
-  layout: z.array(layoutItemSchema),
-});
+  layout: z.unknown(),
+}).passthrough();
 
 const defaultLayout = {
   widgets: [
@@ -69,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, layout: layoutData } = parsed.data;
-    const layoutJson = (layoutData ?? defaultLayout) as unknown as Prisma.InputJsonValue;
+    const layoutJson = (layoutData ?? defaultLayout) as Prisma.InputJsonValue;
 
     const existing = await prisma.dashboardLayout.findFirst({
       where: { isDefault: true },
