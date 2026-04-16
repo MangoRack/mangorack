@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: runner
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
