@@ -54,7 +54,7 @@ services:
   worker:
     build: .
     restart: unless-stopped
-    command: ["npx", "tsx", "src/workers/index.ts"]
+    command: ["node", "node_modules/tsx/dist/cli.mjs", "src/workers/index.ts"]
     environment:
       - DATABASE_URL=postgresql://mangorack:${POSTGRES_PASSWORD:-CHANGE_ME_BEFORE_DEPLOYING}@db:5432/mangorack
       - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme_redis}@redis:6379
