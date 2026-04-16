@@ -12,7 +12,6 @@ function createRedisClient(): Redis {
     enableReadyCheck: false,
     lazyConnect: true,
     connectTimeout: 5000,
-    commandTimeout: 3000,
     retryStrategy(times: number) {
       if (times > 10) return null;
       return Math.min(times * 200, 5000);
