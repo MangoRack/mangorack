@@ -35,3 +35,14 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 USER nextjs
 EXPOSE 3000
 CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+
+FROM base AS worker
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/package.json ./package.json
+CMD ["node", "node_modules/tsx/dist/cli.mjs", "src/workers/index.ts"]
