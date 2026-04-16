@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useState } from "react"
 import { X, Lock, Loader2 } from "lucide-react"
+import { useLicense } from "@/hooks/useLicense"
 
 export const serviceSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -58,6 +59,7 @@ export default function ServiceForm({
   submitLabel,
 }: ServiceFormProps) {
   const [tagInput, setTagInput] = useState("")
+  const { isPro } = useLicense()
 
   const {
     register,
@@ -339,11 +341,11 @@ export default function ServiceForm({
               {...register("pingInterval", { valueAsNumber: true })}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value={10} disabled>
-                10 seconds (PRO)
+              <option value={10} disabled={!isPro}>
+                10 seconds {!isPro && "(PRO)"}
               </option>
-              <option value={30} disabled>
-                30 seconds (PRO)
+              <option value={30} disabled={!isPro}>
+                30 seconds {!isPro && "(PRO)"}
               </option>
               <option value={60}>60 seconds</option>
               <option value={300}>5 minutes</option>
@@ -351,15 +353,17 @@ export default function ServiceForm({
               <option value={1800}>30 minutes</option>
               <option value={3600}>1 hour</option>
             </select>
-            <div className="flex items-center gap-1 mt-1">
-              <Lock className="h-3 w-3 text-violet-400" />
-              <span className="bg-violet-500/10 text-violet-400 text-xs rounded-full px-2 py-0.5">
-                PRO
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">
-                required for intervals under 60s
-              </span>
-            </div>
+            {!isPro && (
+              <div className="flex items-center gap-1 mt-1">
+                <Lock className="h-3 w-3 text-violet-400" />
+                <span className="bg-violet-500/10 text-violet-400 text-xs rounded-full px-2 py-0.5">
+                  PRO
+                </span>
+                <span className="text-xs text-muted-foreground ml-1">
+                  required for intervals under 60s
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Timeout */}
