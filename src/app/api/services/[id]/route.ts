@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { requireAuth, errorResponse, ApiError } from "@/lib/auth-helpers";
 import { isSafeUrl } from "@/lib/url-safety";
 
@@ -86,7 +87,7 @@ export async function PATCH(
 
     const service = await prisma.service.update({
       where: { id: params.id },
-      data,
+      data: data as Prisma.ServiceUpdateInput,
       include: { node: true },
     });
 
