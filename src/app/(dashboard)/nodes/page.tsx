@@ -125,7 +125,7 @@ export default function NodesPage() {
         storage: formStorage.trim() || null,
       }
 
-      const url = editingNode ? `/api/nodes?id=${editingNode.id}` : "/api/nodes"
+      const url = editingNode ? `/api/nodes/${editingNode.id}` : "/api/nodes"
       const method = editingNode ? "PATCH" : "POST"
 
       const res = await fetch(url, {
