@@ -14,18 +14,20 @@ import { AlertList } from "@/components/alerts/AlertList"
 import { AlertForm } from "@/components/alerts/AlertForm"
 import { AlertBadge } from "@/components/alerts/AlertBadge"
 import type { Alert, AlertEvent, AlertWithEvents } from "@/types/alert"
+import { useLicense } from "@/hooks/useLicense"
 
 export default function AlertsPage() {
   const { data: alerts, isLoading } = useAlerts()
   const createAlert = useCreateAlert()
   const updateAlert = useUpdateAlert()
   const deleteAlert = useDeleteAlert()
+  const { isPro } = useLicense()
   const [showForm, setShowForm] = useState(false)
   const [editingAlert, setEditingAlert] = useState<Alert | null>(null)
 
   const alertList = (alerts || []) as AlertWithEvents[]
   const alertCount = alertList.length
-  const freeLimit = 3
+  const alertLimit = isPro ? 999999 : 3
 
   // Collect all events across alerts for the feed
   const allEvents: (AlertEvent & { alertName: string; severity: Alert["severity"] })[] =
@@ -106,7 +108,7 @@ export default function AlertsPage() {
 
         <button
           onClick={() => setShowForm(true)}
-          disabled={alertCount >= freeLimit}
+          disabled={alertCount >= alertLimit}
           className="flex items-center gap-1.5 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="h-4 w-4" />
@@ -129,16 +131,18 @@ export default function AlertsPage() {
           />
 
           {/* Free tier notice */}
-          <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-4 py-2.5 border border-border">
-            You have {alertCount}/{freeLimit} alerts.{" "}
-            <a
-              href="/settings/license"
-              className="text-primary hover:underline font-medium"
-            >
-              Upgrade to Pro
-            </a>{" "}
-            for up to 50 alerts.
-          </div>
+          {!isPro && (
+            <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-4 py-2.5 border border-border">
+              You have {alertCount}/{alertLimit} alerts.{" "}
+              <a
+                href="/settings/license"
+                className="text-primary hover:underline font-medium"
+              >
+                Upgrade to Pro
+              </a>{" "}
+              for up to 50 alerts.
+            </div>
+          )}
 
           {/* Alert Events Feed */}
           {allEvents.length > 0 && (

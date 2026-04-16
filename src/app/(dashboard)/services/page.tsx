@@ -15,14 +15,14 @@ import ServiceCard from "@/components/services/ServiceCard"
 import ServiceTable from "@/components/services/ServiceTable"
 import Dialog from "@/components/ui/Dialog"
 import type { ServiceWithNode } from "@/types/service"
-
-const FREE_LIMIT = 5
+import { useLicense } from "@/hooks/useLicense"
 
 export default function ServicesPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("ALL")
   const [view, setView] = useState<"grid" | "table">("grid")
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const { isPro } = useLicense()
 
   const filters: ServiceFilters = {
     search: search || undefined,
@@ -32,7 +32,7 @@ export default function ServicesPage() {
   const { data, isLoading, error } = useServices(filters)
   const services: ServiceWithNode[] = Array.isArray(data?.data) ? data.data : []
   const total = data?.meta?.total ?? services.length
-  const atFreeLimit = total >= FREE_LIMIT
+  const atFreeLimit = !isPro && total >= 5
 
   const upCount = services.filter((s) => s.currentStatus === "UP").length
   const downCount = services.filter((s) => s.currentStatus === "DOWN").length
@@ -199,7 +199,7 @@ export default function ServicesPage() {
         className="rounded-lg border border-border bg-card p-6 shadow-lg max-w-md w-full mx-4"
       >
         <p className="text-sm text-muted-foreground mb-4 mt-2">
-          You&apos;ve reached the free tier limit of {FREE_LIMIT} services.
+          You&apos;ve reached the free tier limit of 5 services.
           Upgrade to Pro for unlimited services, faster check intervals, and
           more.
         </p>

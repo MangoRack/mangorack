@@ -3,10 +3,28 @@
 import { useState, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ScrollText } from "lucide-react"
+import { useLicense } from "@/hooks/useLicense"
 import { LogEntryRow } from "./LogEntry"
 import { LogFilters, type LogFiltersState } from "./LogFilters"
 import type { LogEntry } from "@/types/log"
 import type { ApiResponse } from "@/types/api"
+
+function LogRetentionNotice() {
+  const { isPro } = useLicense()
+  if (isPro) return null
+  return (
+    <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-1.5 border border-border">
+      Logs older than 3 days are automatically deleted.{" "}
+      <a
+        href="/settings/license"
+        className="text-primary hover:underline font-medium"
+      >
+        Upgrade to Pro
+      </a>{" "}
+      for 90-day retention.
+    </div>
+  )
+}
 
 interface LogViewerProps {
   serviceId?: string
@@ -164,16 +182,7 @@ export function LogViewer({
           </button>
         </div>
 
-        <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-1.5 border border-border">
-          Logs older than 3 days are automatically deleted.{" "}
-          <a
-            href="/settings/license"
-            className="text-primary hover:underline font-medium"
-          >
-            Upgrade to Pro
-          </a>{" "}
-          for 90-day retention.
-        </div>
+        <LogRetentionNotice />
       </div>
     </div>
   )

@@ -26,6 +26,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { useAnalytics, type AnalyticsData } from "@/hooks/useAnalytics"
+import { useLicense } from "@/hooks/useLicense"
 import { MetricsLineChart } from "@/components/charts/MetricsLineChart"
 import { LogVolumeChart } from "@/components/charts/LogVolumeChart"
 
@@ -56,17 +57,19 @@ function ProOverlay() {
 function ChartCard({
   title,
   children,
-  isPro = false,
+  requiresPro = false,
 }: {
   title: string
   children: React.ReactNode
-  isPro?: boolean
+  requiresPro?: boolean
 }) {
+  const { isPro } = useLicense()
+  const locked = requiresPro && !isPro
   return (
     <div className="rounded-lg border border-border bg-card p-5 relative">
       <h3 className="text-sm font-semibold mb-4">{title}</h3>
-      {isPro && <ProOverlay />}
-      <div className={isPro ? "blur-sm opacity-50 pointer-events-none" : ""}>
+      {locked && <ProOverlay />}
+      <div className={locked ? "blur-sm opacity-50 pointer-events-none" : ""}>
         {children}
       </div>
     </div>
@@ -194,6 +197,7 @@ const emptyAnalytics: AnalyticsData = {
 export default function AnalyticsPage() {
   const [range, setRange] = useState("24h")
   const { data: analytics, isLoading } = useAnalytics(range)
+  const { isPro: userIsPro } = useLicense()
   const d = analytics || emptyAnalytics
 
   return (
@@ -223,7 +227,7 @@ export default function AnalyticsPage() {
               }`}
             >
               {label}
-              {pro && (
+              {pro && !userIsPro && (
                 <span className="text-[10px] px-1 py-0.5 rounded bg-primary/20 text-primary font-bold leading-none">
                   PRO
                 </span>
@@ -351,7 +355,7 @@ export default function AnalyticsPage() {
 
           {/* Charts - Pro tier (2x2 grid, blurred) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartCard title="Top 5 Slowest Services" isPro>
+            <ChartCard title="Top 5 Slowest Services" requiresPro>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={d.slowestServices}
@@ -395,7 +399,7 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Top 5 Most Errors" isPro>
+            <ChartCard title="Top 5 Most Errors" requiresPro>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={d.mostErrors}
@@ -438,7 +442,7 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Uptime Heatmap" isPro>
+            <ChartCard title="Uptime Heatmap" requiresPro>
               <HeatmapGrid
                 data={d.uptimeHeatmap}
                 colorScale={(v) => {
@@ -451,7 +455,7 @@ export default function AnalyticsPage() {
               />
             </ChartCard>
 
-            <ChartCard title="Response Time Heatmap" isPro>
+            <ChartCard title="Response Time Heatmap" requiresPro>
               <HeatmapGrid
                 data={d.responseTimeHeatmap}
                 colorScale={(v) => {

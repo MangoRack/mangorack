@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, type ReactNode } from "react"
+import { useLicense } from "@/hooks/useLicense"
 import {
   GripVertical,
   RefreshCw,
@@ -38,13 +39,15 @@ export function WidgetWrapper({
   isLoading,
   error,
   onRefresh,
-  isPro,
+  isPro: requiresPro,
   showTimeRange,
   timeRange,
   onTimeRangeChange,
   dragHandleProps,
 }: WidgetWrapperProps) {
   const { isEditMode, resizeWidget, removeWidget } = useDashboardStore()
+  const { isPro: userIsPro } = useLicense()
+  const locked = requiresPro && !userIsPro
   const [menuOpen, setMenuOpen] = useState(false)
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -206,7 +209,7 @@ export function WidgetWrapper({
         )}
 
         {/* PRO overlay */}
-        {isPro && (
+        {locked && (
           <div className="absolute inset-0 backdrop-blur-sm bg-card/60 flex flex-col items-center justify-center gap-3 z-10">
             <Lock className="w-8 h-8 text-[hsl(var(--pro))]" />
             <p className="text-sm font-semibold text-foreground">Pro Feature</p>
